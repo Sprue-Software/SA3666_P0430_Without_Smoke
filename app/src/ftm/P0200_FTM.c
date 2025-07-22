@@ -78,17 +78,6 @@ const nextGenCommsCommand_t P0200_FTMCommandTable[P0200_FTM_COMMAND_COUNT] = {
   {.command = LED_GetState, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_LED_GetState},
   {.command = LED_StartTest, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_LED_StartTest},
 
-  {.command = Obs_SelectSensor, .rxSizeMin = 1u, .rxSizeMax = 1u, .handler = FTM_Obs_SelectSensor},
-  {.command = Obs_SimObDis, .rxSizeMin = 2u, .rxSizeMax = 2u, .handler = FTM_Obs_SimObDis},
-  {.command = Obs_SetObDetPeriod, .rxSizeMin = 2u, .rxSizeMax = 2u, .handler = FTM_Obs_SetObDetPeriod},
-  {.command = Obs_SetObDetBISTState, .rxSizeMin = 1u, .rxSizeMax = 1u, .handler = FTM_Obs_SetObDetBISTState},
-  {.command = Obs_SetCoDetBISTState, .rxSizeMin = 1u, .rxSizeMax = 1u, .handler = FTM_Obs_SetCoDetBISTState},
-  {.command = Obs_GetDetResult, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_Obs_GetObsDetResults},
-  {.command = Obs_StopTests, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_Obs_StopTests},
-  {.command = Obs_SensorResult, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_Obs_SensorResult},
-  {.command = Obs_RunBist, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_Obs_RunBist},
-  {.command = Obs_BistResult, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_Obs_BistResult},
-
   {.command = AssistanceLight_SetState, .rxSizeMin = 1u, .rxSizeMax = 1u, .handler = FTM_AssistanceLight_SetState},
 
   {.command = Reset_Soft, .rxSizeMin = 0u, .rxSizeMax = 0u, .handler = FTM_Reset_Soft},
@@ -169,8 +158,7 @@ void RestoreFTMDefaults(void)
   }
   SetAssistanceLightStatus(false);
   LEDBuzz_SetFTMPulseTone(false);
-  set_obs_det_ftm_timeover(false);
-  set_obs_det_ftm_period_timeover(false);
+
   (void)BURTCTimer_Stop(FTM_Test_Btn_event_1);
   setBehavioural_Operational_State(state_Idle);
 }

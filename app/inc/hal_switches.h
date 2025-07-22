@@ -25,7 +25,6 @@
 #define RELEASE_GAP_MAX 		    (1000u)
 #define SHORT_PRESS_TIME		    (1000u) /* short press timeout time is 1 second */
 #define LONG_PRESS_HOLD_TIME	  (3000u) /* Long press time */
-#define EXTENDED_BIST_LASER_TIME  (5000u) /* Extended BIST with Laser */
 #define BUTTON_PATTERN_MONITOR	(5000u) /* maximum time button patterns are monitored */
 #define BUTTON_PRESS_COUNTER_MAX (5u)  /* maximum valid button press */
 
@@ -57,7 +56,6 @@ typedef enum {
 	Button_LongPressHold, /* self test long press and hold */
 	Button_Stuck, /* self test button stuck state */
 	Button_userExtTest,
-	Button_userExtndTestLaser,
 } Button_state_t;
 
 typedef enum {

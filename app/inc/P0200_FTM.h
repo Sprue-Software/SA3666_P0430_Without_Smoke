@@ -120,17 +120,6 @@ nextGenCommsAckNackReason_t FTM_Temp_SimulateTempVal(const uint8_t message[], co
 nextGenCommsAckNackReason_t FTM_LED_GetState(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
 nextGenCommsAckNackReason_t FTM_LED_StartTest(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
 
-nextGenCommsAckNackReason_t FTM_Obs_SelectSensor(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_SimObDis(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_SetObDetPeriod(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_SetObDetBISTState(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_SetCoDetBISTState(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_GetObsDetResults(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_StopTests(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_SensorResult(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_RunBist(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-nextGenCommsAckNackReason_t FTM_Obs_BistResult(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
-
 nextGenCommsAckNackReason_t FTM_AssistanceLight_SetState(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
 
 nextGenCommsAckNackReason_t FTM_Reset_Soft(const uint8_t message[], const uint16_t messageSize, commsMsg_t *resultData);
@@ -231,17 +220,7 @@ typedef enum {
   /*LED commands*/
   LED_GetState = 0x0B01u,
   LED_StartTest = 0x0B02u,
-  /*Obstacle Coverage commands*/
-  Obs_SelectSensor = 0x0C01u,
-  Obs_SimObDis = 0x0C02u,
-  Obs_SetObDetPeriod = 0x0C03u,
-  Obs_SetObDetBISTState = 0x0C04u,
-  Obs_SetCoDetBISTState = 0x0C05u,
-  Obs_GetDetResult = 0x0C0Fu,
-  Obs_StopTests = 0x0C10u,
-  Obs_SensorResult = 0x0C11u,
-  Obs_RunBist = 0x0C12u,
-  Obs_BistResult = 0xC13u,
+
   /*Assistance light commands*/
   AssistanceLight_SetState = 0x0D01u,
   /*CPU reset command*/

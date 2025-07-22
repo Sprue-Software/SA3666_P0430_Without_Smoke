@@ -1586,30 +1586,6 @@ uint8_t DataLogging_GetDeadBatteryBistPeriod(void) {
 }
 
 /****************************************************************************************************//**
-*                                       	DataLogging_SetLaserCalData()
-*
-* @brief	Write laser calibration data in the EEPROM
-*
-* @param	LaserCalibrationData	pointer to laser calibration data
-********************************************************************************************************/
-void DataLogging_SetLaserCalData(const uint8_t LaserCalibrationData[LASER_CALIBRATION_DATA_LEN]) {
-	uint16_t addr = (uint16_t)(DATALOGGING_CALIB_CONFIG_ADDR_OFFSET + (uint16_t)(offsetof(dl_cfg_calib_data_type, LaserCalibrationData)));
-	DataLogging_WriteData(LaserCalibrationData, addr, LASER_CALIBRATION_DATA_LEN);
-}
-
-/****************************************************************************************************//**
-*                                        	DataLogging_GetLaserCalData()
-*
-* @brief	Read laser calibration data from the EEPROM
-*
-* @param	LaserCalibrationData	pointer to laser calibration data
-********************************************************************************************************/
-void DataLogging_GetLaserCalData(uint8_t LaserCalibrationData[LASER_CALIBRATION_DATA_LEN]) {
-	uint16_t addr = (uint16_t)(DATALOGGING_CALIB_CONFIG_ADDR_OFFSET + (uint16_t)(offsetof(dl_cfg_calib_data_type, LaserCalibrationData)));
-	DataLogging_ReadData(LaserCalibrationData, addr, LASER_CALIBRATION_DATA_LEN);
-}
-
-/****************************************************************************************************//**
 *                                  DataLogging_SetTempConfig()
 *
 * @brief	Write temperature configuration in the EEPROM
@@ -4139,14 +4115,6 @@ static bool send_logbook_to_mcu2( const uint8_t event_type )
 		case DEF_LBE_DEMOUNTED_END:
 		case DEF_LBE_DEMOUNTED_DET_HW_ERR_START:
 		case DEF_LBE_DEMOUNTED_DET_HW_ERR_END:
-
-		/* Obstacle */
-		case DEF_LBE_OBSTACLE_DET_START:
-		case DEF_LBE_OBSTACLE_DET_END:
-		case DEF_LBE_OBSTACLE_DET_HW_ERR_START:
-		case DEF_LBE_OBSTACLE_DET_HW_ERR_END:
-		case DEF_LBE_COVERAGE_DET_START:
-		case DEF_LBE_COVERAGE_DET_END:
 
 		/* Temp Humid */
 		case DEF_LBE_TEMP_OOR_START:

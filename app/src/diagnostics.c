@@ -87,7 +87,7 @@ uint8_t runBuzzerBist()
 /**
  * @brief runs All bist
  * @details This module is being called from diagnostics to check
- * heat, co, buzzer, obstacle battery temp humid hw fault
+ * heat, co, buzzer, battery, temp humid hw fault
  * @Param n/a
  * @return true = success and false = failure
  */
@@ -324,13 +324,6 @@ bool diagnostics(behaviour_state_enum_System_modes modes, Ads_state_t ADS_status
            if ((flags & FLAGS_BIT_INDEX(TMR_BUZZER_BIST_event_0)) != 0u)
            {
                runBuzzerBist();
-           }
-           if ((flags & FLAGS_BIT_INDEX(TMR_Obstacle_Coverage_BIST_event_0)) != 0u)
-           {
-               Set_OC_Parameter(OC_detection ,0u,0u,0u,0u);
-               SPIComms_Send_Data_to_MCU2(SPI_CMD_Trig_Detection);
-               set_obs_det_ftm_period_timeover(false);
-               DEBUG_DIAG("\n Obstacle + Coverage BIST  ", false, 0u);
            }
        }
        /* This will happen only when device- Standby mode + ADS off only Battery +Temp+SPI will be active */

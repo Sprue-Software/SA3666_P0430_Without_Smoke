@@ -77,7 +77,9 @@ typedef enum {
 	FTM_Timeout_event_1,  /**<6 FTM Timeout Event, non-periodic */
 	Assistance_Light_event_1,  /**<7 Assistance light timeout event, non-periodic */
 	TMR_EVENT_COUNTERS_SPI_SEND_1,  /**<8 Send event counters to MCU2 event, periodic */
+#ifdef Usha
 	Start_Laser_BIST_1,  /**<9 Starts Laser BIST test, non-periodic */
+#endif
 	Check_BIST_Results_1, /**<10 Checks the BIST result, non-periodic */
 	TMR_Time_Production_Lockout_1, /**<11 time production lockout period, non-periodic */
 	TMR_AmbientLight_7days_darkness_1, /**<12 AmbientLight light 7 days in darkness, periodic */
@@ -86,7 +88,9 @@ typedef enum {
 	TMR_FAILED_SPI_COMMS_TIMEOUT_1, /**<15 SPI fail timer timeout, 20min Non-periodic */
 	TMR_Disable_DBG_Port_1, /**<16 DBG port disable, 10s Non-periodic */
 	TMR_Smoke_Fast_Flame_Disable_1, /**<17 fast flame disable 3min -Non Periodic */
+#ifdef Usha
 	TMR_Extended_Laser_BIST_1, /**<18 extended BIST of laser check */
+#endif
 	NO_OF_EVENTS /** Insert any new event before this item. This item represents the enum length*/
 } BURTCTimer_Events_TypeDef;
 
@@ -106,7 +110,6 @@ typedef enum {
 #define CO_BIST_PERIOD 						          PERIOD_SET(180u) 	        /* CO BIST, periodic= 3 min */
 #define CO_INCREASED_SAMPLE_RATE 			      PERIOD_SET(10u)		        /* Increased CO detected change rate of acquisition , periodic  10sec */
 #define BUZZER_BIST_PERIOD 					        PERIOD_SET(604800u)	      /* Buzzer BIST  , periodic  every 7 days*/
-#define OBSTACLE_COVARAGE_PERIOD 			      PERIOD_SET(604800u)       /* Obstacle & Coverage  Detection/BIST , periodic every 7 days*/
 #define TEMP_HUMIDITY_PERIOD 				        PERIOD_SET(120u) 	        /* Temperature & Humidity BIST & measurement,periodic= 2 min */
 #define HEARTBEAT_PERIOD                    PERIOD_SET(60u)           /* 3 every 60 sec */
 #define AMBIENT_LIGHT_7DAYS_PERIOD 			    PERIOD_SET(604800u)  	    /* AmbientLight in Darkness, periodic= every 7 days */
@@ -121,7 +124,6 @@ typedef enum {
 #define WDOGTIMER_EVENT_PERIOD_TEN_SEC      PERIOD_SET(10u)           /* 1 BURTC tick period i.e. 10sec*/
 #define DEMOUNTED_SHORT_MONITOR_PERIOD		  PERIOD_SET(60u)           /* confirmation of demounted state 1 minute */
 #define EVENT_COUNTERS_PERIOD               PERIOD_SET(86400u) 	      /* Daily, 24 hours */
-#define EVENT_START_LASER_BIST_PERIOD       PERIOD_SET(10u)           /* 10sec Non-periodic */
 #define EVENT_CHECK_BIST_RESULT_PERIOD      PERIOD_SET(30u)           /* 30sec Non-periodic */
 #define TIME_PRODUCTION_LOCKOUT_PERIOD      PERIOD_SET(432000u)       /* 120 hour in seconds */
 #define DEMOUNT_ONE_MIN_PERIOD              PERIOD_SET(60u)           /* 1 min */

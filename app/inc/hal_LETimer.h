@@ -39,7 +39,9 @@ typedef enum {
 	LETIMER_SPI_COMMS_TIMEOUT, /*spi timeout timer for faulty SPI for 20 min */
 	LETIMER_FAILED_SPI_COMMS_TIMEOUT,
 	LETIMER_EXT_USER_TEST,
+#ifdef Usha
 	LETIMER_EXT_USER_LASER_TEST,
+#endif
 	LETIMER_EVENTS_SIZE /*Enum size*/
 } LETimer_Events_TypeDef;
 

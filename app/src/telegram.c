@@ -262,8 +262,6 @@
 #define EM1_MODE  0x02u
 #define EM2_MODE  0x03u
 
-#define MAX_LASER_STRIKE_COUNT      (3u)
-
 /********************************************************************************************************
  *********************************************************************************************************
  *                                             VARIABLES
@@ -272,27 +270,14 @@
   static uint8_t Telegram_LinkLayerStatus; /**< Protocol Link Status */
   static uint8_t Telegram_StandardResponse;/**< Protocol STD response */
   static uint8_t Telegram_CurrentCommand;/**< Protocol Command */
-  static uint8_t lasor_sensor_gain=0u;
-  static uint8_t lasor_sensor_offset=0u;
-  static uint16_t lasor_sensor_distance=0u;
+
   static RADIO_TEST test_value; /**< Variable for radio test */
-  static bool obs_det_ftm_timePeriod = false;
-  static bool obs_det_ftm_period_timeover = false;
   dl_fw_rev_data_t fw_data; /**< Variable for FW revision */
   Set_Parameter_for_OC OC_data;
-  LASER_TEST laser_result;
 
-  static bool obsFaultSet = false;
-  static bool obsHwFaultSet = false;
-  static bool covDetectionFlag = false;
   static uint8_t airingConfigStatus = 0U;
   static bool airingLightStatus = true;
-  static bool laser_result_validated = false;
   static bool rem_alarm_sil = false;
-
-#ifdef DEBUG_BUILD
-  uint8_t laser_data_RX[DEF_LEN_LASER_RX_DATA] ={0};
-#endif
 
  static uint8_t remote_alarm = REM_ALM_END;           /**< Variable for remote Alarm */
 
@@ -317,7 +302,6 @@ static void Telegram_GetProductionBLOB (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetTerminateProduction (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetRadioTest (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetTriggerOCDetection (SPICOMMS_DATA_PACKET *p_packet);
-static void Telegram_GetLaser_RX_Data (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetDateAndTime (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetEnergyMode (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetRadioPrivateConfig(SPICOMMS_DATA_PACKET *p_packet);
@@ -422,10 +406,6 @@ Telegram_GetApplicationData (SPICOMMS_DATA_PACKET *p_packet)
       Telegram_GetRadioTest (p_packet);
       break;
 
-    case DEF_TRIG_OC_DETECTION:/**< will be use to trigger obs detection */
-      Telegram_GetTriggerOCDetection (p_packet);
-      break;
-
     case DEF_DATE_AND_TIME:
       Telegram_GetDateAndTime (p_packet);
       break;
@@ -433,8 +413,6 @@ Telegram_GetApplicationData (SPICOMMS_DATA_PACKET *p_packet)
     case DEF_ENTER_EM:/**< MCU-1 Don't support this command but MCU-2 has implementation : Use in the Production */
       Telegram_GetEnergyMode (p_packet);
       break;
-    case DEF_RADIO_CONFIG_SWITCH:/** DCR119 */
-      Telegram_GetRadioPrivateConfig(p_packet);
       break;
     case DEF_TOGGLE_AIRING_RECOMMENDATION:/**<  Airing recommendation  feature enable or Disable*/
       Telegram_GetToggleAiringRecommendation (p_packet);
@@ -979,57 +957,6 @@ Telegram_GetRadioTest (SPICOMMS_DATA_PACKET *p_packet)
 }
 
 /****************************************************************************************************//**
- *                                    Telegram_GetTriggerOCDetection()
- *
- * @brief This Function will Trigger Obstacle and Coverage Detection
- * @param p_packet  packet to transmit
- * @return NULL
- ********************************************************************************************************/
-static void
-Telegram_GetTriggerOCDetection (SPICOMMS_DATA_PACKET *p_packet)
-{
-  Set_Parameter_for_OC OC_data_MCU2;
-  if (p_packet != NULL)
-    {
-       p_packet->TxPacket.Buffer[DEF_INDEX_COMMAND] = DEF_TRIG_OC_DETECTION; /* command  */
-      /* New Data As Per techem requirements */
-      get_OC_Parameter (&OC_data_MCU2);
-      if (OC_data_MCU2.val !=0u)
-        {
-          p_packet->TxPacket.Buffer[DEF_OC_COMMAND_1] = (uint8_t) OC_data_MCU2.val; /* Command  */
-          p_packet->TxPacket.Buffer[DEF_OC_COMMAND_2] = OC_data_MCU2.parameter_1; /* Para 1 */
-          p_packet->TxPacket.Buffer[DEF_OC_COMMAND_3] = OC_data_MCU2.parameter_2; /* Para 2  */
-          p_packet->TxPacket.Buffer[DEF_OC_COMMAND_4] = OC_data_MCU2.parameter_3; /* Para 3  */
-          p_packet->TxPacket.Buffer[DEF_OC_COMMAND_5] = OC_data_MCU2.parameter_4; /* Para 4 */
-          p_packet->TxPacket.Length = DEF_LEN_TRIG_OC_DETECTION_BIST; /* length  */
-        }
-  }
-}
-
-/****************************************************************************************************//**
- *                                      Telegram_GetLaserCalibration()
- * @brief This function will  get laser calibration data
- * @param p_packet  packet to transmit
- * @return NULL
- ********************************************************************************************************/
-static void
-Telegram_GetLaser_RX_Data (SPICOMMS_DATA_PACKET *p_packet)
-{
-  /* To Do: no data format agreed yet *//* data   */
-#ifdef DEBUG_BUILD
-  for (uint16_t laser_data=1u;laser_data<DEF_LEN_LASER_RX_DATA;laser_data++)
-  {
-    laser_data_RX[laser_data] = p_packet->RxPacket.Buffer[laser_data];
-  }
-  set_obs_det_ftm_timeover(true);
-
-#endif
-
-
-
-}
-
-/****************************************************************************************************//**
  *                                        Telegram_GetDEnergyMode()
  *
  * @brief This function will read energy mode to send info to MCU2
@@ -1046,30 +973,6 @@ Telegram_GetEnergyMode (SPICOMMS_DATA_PACKET *p_packet)
       p_packet->TxPacket.Length = DEF_LEN_ENERGY_MODE; /* length  */
     }
 }
-
-
-static void
-Telegram_GetRadioPrivateConfig(SPICOMMS_DATA_PACKET *p_packet)
-{
-  uint32_t radio_data = 0u;
-  radio_data = DataLogging_GetFeatureconfigurationFlags();
-  if (p_packet != NULL)
-  {
-     p_packet->TxPacket.Buffer[DEF_INDEX_COMMAND] = DEF_RADIO_CONFIG_SWITCH; /* command  */
-
-     if (((radio_data & (1u << RADIO_PRIVATE_DATA_LOCATION))) != 0u)
-     {
-         p_packet->TxPacket.Buffer[DEF_AI_LIGHT_RECOMMENDATION] = DEF_RADIO_PVT_DATA_ON; /* Radio Pvt data on   */
-     }
-     else
-     {
-         p_packet->TxPacket.Buffer[DEF_AI_LIGHT_RECOMMENDATION] = DEF_RADIO_PVT_DATA_OFF;/* Radio Pvt data off   */
-     }
-
-     p_packet->TxPacket.Length = DEF_LEN_TOGGLE_AIRING_RECOMMENDATION; /* length   */
-  }
-}
-
 
 /****************************************************************************************************//**
  *                                 Telegram_GetToggleAiringRecommendation()
@@ -1251,182 +1154,6 @@ Telegram_SetOperatingMode (SPICOMMS_DATA_PACKET *p_packet)
       }
 
     }
-}
-
-/****************************************************************************************************//**
- *                                      Telegram_SetResultObsCovDet()
- *
- * @brief This API will  Set coverage and obstacle detection result received from MCU2
- * @param p_packet  pointer to packet containing the received data
- * @return NULL
- ********************************************************************************************************/
-static void
-Telegram_SetResultObsCovDet (SPICOMMS_DATA_PACKET *p_packet)
-{
-    uint8_t cov_det_result_1 = 0u;
-    uint8_t cov_det_result_2 = 0u;
-    uint8_t obs_cov_BIST_result = 0u;
-    static uint8_t laserHwStrikeCount = 0u;
-
-    if (p_packet != NULL)
-    {
-      obs_cov_BIST_result = p_packet->RxPacket.Buffer[DEF_OC_OBJECT_DETECTION_RESULT]; /* data     */
-      cov_det_result_1 = p_packet->RxPacket.Buffer[DEF_OC_COVERAGE_DETECTION_RESULT_1];
-      cov_det_result_2 =   p_packet->RxPacket.Buffer[DEF_OC_COVERAGE_DETECTION_RESULT_2];
-
-      //@notes  Below code handling may change in future and need better handling
-      //cov_det_result_1 =00 Always except error
-      /* If Obstacle detection BIST result */
-      if ((obs_cov_BIST_result==LASER_DITECTION) ||(obs_cov_BIST_result==LASER_BIST))
-      {
-          /* Below Conditions are proposed by Techem and may be change in future */
-          if ((cov_det_result_1 == 0u) && (cov_det_result_2 == 0u))
-          {
-              DEBUG_TELEGRAM("\nNO DETECTION", false, 0u);
-              laser_result = LASER_NO_DETETCION;
-              if(covDetectionFlag == true)
-              {
-                  FaultHandler_FaultClear(CoverageDetectedFault);
-                  DataLogging_SetEventLogbookRecord( DEF_LBE_COVERAGE_DET_END, NULL );
-                  covDetectionFlag = false;
-                  DataLogging_SetMinorFault(FaultCoverageDetected, covDetectionFlag);
-              }
-
-              if(obsFaultSet == true)  //reset
-              {
-                  FaultHandler_FaultClear(ObstacleDetectedFault);
-                  DataLogging_SetEventLogbookRecord( DEF_LBE_OBSTACLE_DET_END, NULL );
-                  obsFaultSet = false;
-                  DataLogging_SetMinorFault(FaultObstacleDetected, obsFaultSet);
-              }
-
-          }
-          if ((cov_det_result_1 == 0u) && (cov_det_result_2 == 1u))
-          {
-              DEBUG_TELEGRAM("\nLASER_OBSTACLE_DETETCION", false, 0u);
-              laser_result = LASER_OBSTACLE_DETETCION;
-              if(obsFaultSet == false)
-              {
-                  FaultHandler_FaultSet(ObstacleDetectedFault);
-                  DataLogging_SetEventLogbookRecord( DEF_LBE_OBSTACLE_DET_START, NULL );
-                  obsFaultSet = true;
-                  DataLogging_SetMinorFault(FaultObstacleDetected, obsFaultSet);
-              }
-
-          }
-          if ((cov_det_result_1 == 0u) && (cov_det_result_2 == 2u))
-          {
-              DEBUG_TELEGRAM("\nLASER_COVERAGE_DETETCION", false, 0u);
-              laser_result = LASER_COVERAGE_DETETCION;
-              if(covDetectionFlag == false)
-              {
-                  FaultHandler_FaultSet(CoverageDetectedFault);
-                  DataLogging_SetEventLogbookRecord( DEF_LBE_COVERAGE_DET_START, NULL );
-                  covDetectionFlag = true;
-                  DataLogging_SetMinorFault(FaultCoverageDetected, covDetectionFlag);
-              }
-          }
-
-          if ((cov_det_result_1 == 0u) && (cov_det_result_2 == 0xffu))
-          {
-              DEBUG_TELEGRAM("\nLASER_SENSOR_FAILUARE", false, 0u);
-              laser_result = LASER_SENSOR_FAILUARE;
-          }
-
-          if(getBehavioural_System_Modes(false) != Commisioning_Mode)
-          {
-              if(laser_result == LASER_SENSOR_FAILUARE)
-              {
-                  if(obsHwFaultSet == false)
-                  {
-                      laserHwStrikeCount++;
-                      if(laserHwStrikeCount >= MAX_LASER_STRIKE_COUNT)
-                      {
-                          FaultHandler_FaultSet(ObstacleDetectionHwFault);
-                          DataLogging_SetEventLogbookRecord( DEF_LBE_OBSTACLE_DET_HW_ERR_START, NULL );
-                          obsHwFaultSet = true;
-                      }
-                  }
-              }
-              else
-              {
-                  laserHwStrikeCount = 0u;
-                  if(obsHwFaultSet == true)
-                  {
-                      FaultHandler_FaultClear(ObstacleDetectionHwFault);
-                      DataLogging_SetEventLogbookRecord( DEF_LBE_OBSTACLE_DET_HW_ERR_END, NULL );
-                      obsHwFaultSet = false;
-                  }
-              }
-          }
-
-      }
-      /* This will read the Distance*/
-      if (obs_cov_BIST_result==LASER_DISTANCE)
-      {
-          lasor_sensor_distance = ((cov_det_result_2 << 8u ) | cov_det_result_1);
-          DEBUG_TELEGRAM("\nLaser distance", true, lasor_sensor_distance);
-      }
-      /* This will read the Gain & offset : Not Sure What MCU-1 will do with this*/
-      if (obs_cov_BIST_result==LASER_GAIN_OFFSET)
-      {
-          lasor_sensor_gain= cov_det_result_1;
-          lasor_sensor_offset=cov_det_result_2;
-      }
-
-      set_laser_status_validated(true);
-
-      if(get_obs_det_ftm_timeover() == false)
-      {
-          set_obs_det_ftm_timeover(true);
-      }
-
-      if(get_obs_det_ftm_period_timeover() == false)
-      {
-          set_obs_det_ftm_period_timeover(true);
-      }
-   }
-
-}
-
-
-
-/****************************************************************************************************//**
- *                                        Get the laser Status()
- *
- * @brief   This function will return laser status
- * @param None
- * @return different result as per the LASER_TEST enum
- ********************************************************************************************************/
-
-LASER_TEST get_laser_status(void)
-{
-     return laser_result;
-}
-
-/****************************************************************************************************//**
- *                                        Get the distance()
- *
- * @brief   This function will return distance
- * @param None
- * @return None
- ********************************************************************************************************/
-
-uint16_t get_laser_distance(void)
-{
-     return lasor_sensor_distance;
-}
-
-/****************************************************************************************************//**
- *                                        Set the distance()
- *
- * @brief   This function will return distance
- * @param None
- * @return None
- ********************************************************************************************************/
-void set_laser_distance(uint16_t distance)
-{
-  lasor_sensor_distance = distance;
 }
 
 /****************************************************************************************************//**
@@ -1693,17 +1420,6 @@ TELEGRAM_ProcessReceivedPacket (SPICOMMS_DATA_PACKET *p_packet)
           TELEGRAM_PrepareTransmitPacket (p_packet);
           break;
 
-        case DEF_RESULT_OC_DETECTION:
-          Telegram_SetResultObsCovDet (p_packet); /* process command              */
-          p_packet->TxPacket.Command = DEF_STANDARD_RESPONSE; /* send standard response           */
-          TELEGRAM_PrepareTransmitPacket (p_packet);
-          break;
-        case DEF_LASER_DATA_RX:
-        Telegram_GetLaser_RX_Data(p_packet); /* process command              */
-        p_packet->TxPacket.Command = DEF_STANDARD_RESPONSE; /* send standard response           */
-         TELEGRAM_PrepareTransmitPacket (p_packet);
-        break;
-
         case DEF_DATE_AND_TIME:
           Telegram_SetDateTime (p_packet); /* process command               */
           p_packet->TxPacket.Command = DEF_STANDARD_RESPONSE; /* send standard response           */
@@ -1871,14 +1587,6 @@ static uint32_t Telegram_GetCommandLength (uint8_t command)
       break;
     case DEF_AIRING_LIGHT:
       length = DEF_LEN_AIRING_LIGHT;
-      break;
-
-    case DEF_RESULT_OC_DETECTION:
-      length = DEF_LEN_RESULT_OC_DETECTION;
-      break;
-
-    case DEF_LASER_DATA_RX:
-      length = DEF_LEN_LASER_RX_DATA;
       break;
 
     case DEF_DATE_AND_TIME:
@@ -2128,8 +1836,8 @@ get_value_for_SPI (behaviour_state_enum_System_modes data_mode,
           tx_data->Smoke_val = 0u;
           tx_data->Degraded_chamber_val = 0u;
           tx_data->Soiling_val = 0u;
-          tx_data->Coverage_Status = 0x19; // Future use
-          tx_data->Obs_Status = 0x1A; // Future use
+          tx_data->Coverage_Status = 0u; // Future use
+          tx_data->Obs_Status = 0u; // Future use
           /*Check the Ambient light Bist */
           const bool perform_measurement = false;
           if (ambient_light_get_BIST ( perform_measurement ) == false)
@@ -2234,17 +1942,9 @@ get_value_for_SPI (behaviour_state_enum_System_modes data_mode,
           /* soiling feature is deprecated */
           tx_data->Soiling_val = 0u;
 		  
-          /* Default coverage failure */
-          if ((fault_val & DEF_COVERAGE_DET_FAULT) != 0u)
-          {
-              tx_data->Coverage_Status = SPI_INVALID_VAL_8_BYTE;
-              tx_data->Obs_Status = SPI_INVALID_VAL_8_BYTE;
-          }
-          else
-          {
-              tx_data->Coverage_Status = 0x19; // Future use
-              tx_data->Obs_Status = 0x1A;      // Future use
-          }
+          tx_data->Coverage_Status = 0u; // Future use
+          tx_data->Obs_Status = 0u;      // Future use
+
           /* Ambient light */
           const bool perform_measurement = false;
           if (ambient_light_get_BIST (perform_measurement) == false)
@@ -2281,99 +1981,6 @@ get_value_for_SPI (behaviour_state_enum_System_modes data_mode,
 }
 
 /****************************************************************************************************//**
-*                                             Set parameter for OC ()
-*
-*@brief   This API will set  Obstacle detection command
-*@param   PARA 1 : oc test command as per techem , Para 2 to 4 :data
-*@return  NONE
-
-********************************************************************************************************/
-void Set_OC_Parameter(OC_TEST command ,uint8_t para_1,uint8_t para_2,uint8_t para_3,uint8_t para_4)
-{
-
- OC_data.val=command; /* Command */
- OC_data.parameter_1=para_1;
- OC_data.parameter_2=para_2;
- OC_data.parameter_3=para_3;
- OC_data.parameter_4=para_4;
-}
-
-/****************************************************************************************************//**
-*                                             Get parameter for OC ()
-*
-*@brief   This API will provide  Obstacle detection Status
-*@param   Struct Obstacle detection command and parameters
-*@return  NONE
-
-********************************************************************************************************/
-void get_OC_Parameter(Set_Parameter_for_OC *OC_data_rt)
-{
-
-
-if (OC_data_rt !=NULL)
-  {
-    OC_data_rt->val=OC_data.val;  /* Command */
-    OC_data_rt->parameter_1=OC_data.parameter_1;
-    OC_data_rt->parameter_2=OC_data.parameter_2;
-    OC_data_rt->parameter_3=OC_data.parameter_3;
-    OC_data_rt->parameter_4=OC_data.parameter_4;
-}
-
-}
-
-/****************************************************************************************************//**
-*                                             set_obs_det_ftm_timeover ()
-*
-*@brief   This API set the FTM get results valid
-*@param   bool: true or false
-*@return  NONE
-
-********************************************************************************************************/
-void set_obs_det_ftm_timeover(bool val)
-{
-  obs_det_ftm_timePeriod = val;
-}
-
-/****************************************************************************************************//**
-*                                             get_obs_det_ftm_timeover ()
-*
-*@brief   This API validates obs detection results for FTM
-*@param   n/a
-*@return  true = success, false = failure
-
-********************************************************************************************************/
-bool get_obs_det_ftm_timeover(void)
-{
-  return obs_det_ftm_timePeriod;
-}
-
-/****************************************************************************************************//**
-*                                             set_obs_det_ftm_period_timeover ()
-*
-*@brief   This API validates obs detection periodic results for FTM
-*@param   bool: true or false
-*@return  NONE
-
-********************************************************************************************************/
-void set_obs_det_ftm_period_timeover(bool val)
-{
-  obs_det_ftm_period_timeover = val;
-}
-
-/****************************************************************************************************//**
-*                                             get_obs_det_ftm_period_timeover ()
-*
-*@brief   This API validates obs detection results for FTM
-*@param   n/a
-*@return  true = success, false = failure
-
-********************************************************************************************************/
-bool get_obs_det_ftm_period_timeover(void)
-{
-  return obs_det_ftm_period_timeover;
-}
-
-/****************************************************************************************************//**
 *                                             set_AiringConfig
 *
 *@brief   This API sets the airing configuration status
@@ -2397,33 +2004,6 @@ void set_AiringConfig(uint8_t status)
 uint8_t get_AiringConfig(void)
 {
    return airingConfigStatus;
-}
-
-/****************************************************************************************************//**
-*                                             set_laser_status_validated
-*
-*@brief   This API sets the laser results status confirm MCU2 did call laser function.
-*@param   bool:status
-*@return  NONE
-
-********************************************************************************************************/
-
-void set_laser_status_validated(bool status)
-{
-  laser_result_validated = status;
-}
-
-/****************************************************************************************************//**
-*                                            get_laser_status_validated
-*
-*@brief   This API gets the laser results status confirm MCU2 did call laser function.
-*@param   None
-*@return  uint8_t:airingConfigStatus
-
-********************************************************************************************************/
-bool get_laser_status_validated(void)
-{
-  return laser_result_validated;
 }
 
 /****************************************************************************************************//**

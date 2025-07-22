@@ -251,13 +251,6 @@ static void InterMCUC_CommsTask(void *p_arg)
                     SPIComms_Transfer (&packet); /* process request                        */
                 }
 
-#if 0
-                if ((flags_spi & FLAGS_BIT_INDEX(SPICmdLaserCalibration))!=0u)
-                {
-                    packet.TxPacket.Command =  DEF_LASER_CALIBRATION;
-                    SPIComms_Transfer (&packet); /* process request                        */
-                }
-#endif
                 if ((flags_spi & FLAGS_BIT_INDEX(SPICmdEnterEMx))!=0u)
                 {
                     packet.TxPacket.Command = DEF_ENTER_EM;

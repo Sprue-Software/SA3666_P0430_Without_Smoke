@@ -194,22 +194,6 @@ void switches_handler_task(void *arg) {
 					short_press_counter = 0; /* reset the short press pattern counter */
 					long_press_pattern = switch_no_long_press;
 				}
-				else if (press_counter == 0u)
-				{
-				    DEBUG_SWI_HAND("extra long press counter", true, press_counter);
-				    const uint32_t prod_comp = prod_get_value( );
-
-				    if ((getBehavioural_Operational_State() == state_Idle)
-				        && (hal_get_ads_state() == Ads_onBase) &&(prod_comp == PROD_COMP_BB))
-				    {
-				        DEBUG_SWI_HAND("** Button_userExtndTestLaser", true, press_counter);
-				        hal_switches_set_pattern(Button_userExtndTestLaser);
-				        set_ftm_btn_pattern(false, false, true, false);
-				        press_counter = 0u; /* reset the pattern counter */
-				        short_press_counter = 0; /* reset the short press pattern counter */
-				        long_press_pattern = switch_no_long_press;
-				    }
-				}
 				OSSchedUnlock(&err); /*Unlock the scheduler*/
 			}
 

@@ -17,8 +17,9 @@
 #include "hal_gpio.h"
 #include "ambient_light.h"
 #include "data_logging.h"
-#include"spi_comms.h"
+#include "spi_comms.h"
 #include "hal_BURTCTimer.h"
+#include "system_events.h"
 
 static uint8_t light_status = (uint8_t)AMBIENT_LEVEL_BRIGHTNESS;
 static uint8_t previous_light_status = (uint8_t)AMBIENT_LEVEL_BRIGHTNESS;
@@ -26,6 +27,7 @@ static uint32_t threshold_hys_brightness_buffer = 0U;
 static uint32_t ambient_light_adc = 0U;
 static uint32_t ambient_ftm_status = 0U;
 static bool seven_days_darkness_status = false;
+bool dark_timer_running = false;
 
 /**
  * @brief this function reads ambient light threshold value from eeprom
@@ -57,8 +59,6 @@ void ambient_light_measure(uint32_t delay, uint8_t sample_count)
   uint32_t ADC_data                 = 0U;
   uint32_t millivolt                = 0U;
   uint32_t millivolt_average        = 0U;
-
-  static bool dark_timer_running    = false;
 
   static uint8_t strike_count       = 3U;
 
@@ -117,8 +117,9 @@ void ambient_light_measure(uint32_t delay, uint8_t sample_count)
     {
       light_status = (uint8_t) AMBIENT_LEVEL_DARKNESS;
 
-      /* Is darkness timer running? */
-      if( !dark_timer_running )
+      /* Is darkness timer running? this feature is available in all the modes except standby and transport mode */
+      if(( !dark_timer_running ) &&
+          (getBehavioural_System_Modes(false) != Standby_Mode) && (getBehavioural_System_Modes(false) != Transport_Mode))
       {
         /* Just a one shot */
         const bool periodic = false;

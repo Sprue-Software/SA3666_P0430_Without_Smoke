@@ -137,9 +137,6 @@ uint32_t FaultHandler_FaultCodeGet(FAULTHANDLER_FAULT fault) {
 	uint32_t fault_code;
 
 	switch (fault) {
-		case ObstacleDetectionHwFault:
-			fault_code = DEF_OBSTACLE_DET_HW_FAUT;
-			break;
 
 		case DemountingDetectionHwFault:
 			fault_code = DEF_DEMOUNTING_DET_HW_FAULT;
@@ -185,13 +182,6 @@ uint32_t FaultHandler_FaultCodeGet(FAULTHANDLER_FAULT fault) {
 			fault_code = DEF_MCU2_RAM_FAULT;
 			break;
 
-		case ObstacleDetectedFault:
-			fault_code = DEF_OBSTACLE_DET_FAULT;
-			break;
-
-		case CoverageDetectedFault:
-			fault_code = DEF_COVERAGE_DET_FAULT;
-			break;
 		case TempSensorOutOfBoundsFault:
 			fault_code = DEF_TEMP_SENSOR_OOB_FAULT;
 			break;

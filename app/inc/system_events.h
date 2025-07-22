@@ -31,8 +31,8 @@ typedef enum {
  */
 typedef enum {
 	state_Idle,/**< System default Operational State, */
-	state_unsued0,/**< smoke state deprecated */
-	state_unused1,/**< smoke state deprecated */
+	state_Smoke_Alarm,/**< smoke state deprecated */
+	state_Smoke_Alarm_Silence,/**< smoke state deprecated */
 	state_Heat_Alarm,/**< System  Operational State, When Heat Alarm conditions occurs */
 	state_Heat_Alarm_Silence,/**< System  Operational State, When Button press for silence heat Alarm */
 	state_CO_Alarm,/**< System  Operational State, When CO Alarm conditions occurs */
@@ -40,7 +40,6 @@ typedef enum {
 	state_Remote_Alarm,/**< System  Operational State, When CO Alarm conditions occurs */
 	state_BISTMode,/**< System  Operational State, When MCU-2 requests or Serial Commands */
 	State_Airing_Configuration,/**< System  Operational State, When Button Press initiated Airing Configuration with 60 sec timeout */
-	State_Radio_PriData_Configuration, /**< System  Operational State, When Button Press initiated Radio Private Data with 60 sec timeout */
 	NUM_State
 } behaviour_state_enum_operational_States;
 

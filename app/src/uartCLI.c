@@ -152,40 +152,52 @@ static const cmdTable_t cliCommandTbl[] =
         .maxNoOfParams     = 1
     },
     {
-        .cmd            = "unused",
-        .handler        = 0,
+        .cmd            = "get-soiling-calib",
+        .handler        = NULL,
         .helpText       = "Get soiling calibration values from EEPROM.",
         .maxNoOfParams  = 0
     },
     {
         .cmd            = "get-soiling-data",
-        .handler        = 0,
+        .handler        = NULL,
         .helpText       = "Get soiling live data values from EEPROM.",
         .maxNoOfParams  = 0
     },
     {
         .cmd            = "set-soiling-calib",
-        .handler        = 0,
+        .handler        = NULL,
         .helpText       = "Set soiling calibration values to EEPROM.",
         .maxNoOfParams  = 7
     },
     {
         .cmd            = "clr-soiling-sim",
-        .handler        = 0,
+        .handler        = NULL,
         .helpText       = "Clear soiling adc simulation value for a given sensor.",
         .maxNoOfParams  = 2
     },
     {
         .cmd            = "set-soiling-sim",
-        .handler        = 0,
+        .handler        = NULL,
         .helpText       = "Set soiling adc simulation value for a given sensor.",
         .maxNoOfParams  = 2
     },
     {
         .cmd            = "run-soiling",
-        .handler        = 0,
+        .handler        = NULL,
         .helpText       = "Run soiling tests using configured sensors and display millivolts",
         .maxNoOfParams  = 0
+    },
+    {
+        .cmd            = "set-smoke-cleanair-threshold",
+        .handler        = NULL,
+        .helpText       = "Set smoke reflection threshold value to EEPROM.",
+        .maxNoOfParams  = 1
+    },
+    {
+        .cmd            = "set-smoke-cal-threshold",
+        .handler        = NULL,
+        .helpText       = "Set smoke calibration threshold value to EEPROM.",
+        .maxNoOfParams  = 1
     },
     {
         .cmd            = "start-heat-simulation",
@@ -222,6 +234,36 @@ static const cmdTable_t cliCommandTbl[] =
          .handler        = CLI_set_battery_calib,
          .helpText       = "Set battery calibration values to EEPROM.",
          .maxNoOfParams  = 4
+    },
+    {
+        .cmd            = "start-smoke-simulation",
+        .handler        = NULL,
+        .helpText       = "Enters/Exits Simulated Smoke mode. Pass 1 to enter and 0 to exit",
+        .maxNoOfParams  = 1
+    },
+    {
+        .cmd            = "get-super-smoke-thresh",
+        .handler        = NULL,
+        .helpText       = "Gets the current super smoke threshold",
+        .maxNoOfParams  = 0
+    },
+    {
+        .cmd            = "get-smoke-thresh",
+        .handler        = NULL,
+        .helpText       = "Gets the current smoke threshold",
+        .maxNoOfParams  = 0
+    },
+    {
+        .cmd            = "inject-smoke",
+        .handler        = NULL,
+        .helpText       = "Inject simulated smoke value",
+        .maxNoOfParams  = 1
+    },
+    {
+        .cmd            = "inject-smoke-thresh",
+        .handler        = NULL,
+        .helpText       = "Inject simulated smoke threshold",
+        .maxNoOfParams  = 1
     },
     {
         .cmd            = "Get-current-Temperature",
@@ -308,6 +350,24 @@ static const cmdTable_t cliCommandTbl[] =
          .maxNoOfParams  = 1
     },
     {
+         .cmd            = "set-smoke-dust-test-values",
+         .handler        = NULL,
+         .helpText       = "Set smoke dust correction test values",
+         .maxNoOfParams  = 2
+    },
+    {
+         .cmd            = "set-smoke-dust-test-mode",
+         .handler        = NULL,
+         .helpText       = "Enable or disables smoke dust test mode",
+         .maxNoOfParams  = 1
+    },
+    {
+         .cmd            = "set-smoke-dust-call-count",
+         .handler        = NULL,
+         .helpText       = "Set smoke dust call count",
+         .maxNoOfParams  = 1
+    },
+    {
          .cmd            = "do-buzzer-test",
          .handler        = CLI_do_buzzer_test,
          .helpText       = "Peforms a buzzer test",
@@ -390,9 +450,9 @@ static const cmdTable_t cliCommandTbl[] =
 /*@Note: Take care to sync the strings if values added or removed */
 static const systemFaultStrToBitMap_t faultStringMap[] = 
 {
-    //{"Smoke Chamber Diode Hw Fault"             ,DEF_SMOKE_CHAMBER_HW_FAULT },
+    {"Smoke Chamber Diode Hw Fault"             ,DEF_SMOKE_CHAMBER_HW_FAULT },
     {"Obstacle Detection Hw Fault"              ,DEF_OBSTACLE_DET_HW_FAUT   },
-    //{"Soiling Detection Hw Fault"               ,DEF_SOILING_DET_HW_FAULT   },
+    {"Soiling Detection Hw Fault"               ,DEF_SOILING_DET_HW_FAULT   },
     {"Demounting Detection Hw Fault"            ,DEF_DEMOUNTING_DET_HW_FAULT},
     {"CO Senser Hw Fault"                       ,DEF_CO_SENSOR_HW_FAULT     },
     {"Temperature Sensor Hw Fault"              ,DEF_TEMP_SENSOR_HW_FAULT   },
@@ -405,9 +465,9 @@ static const systemFaultStrToBitMap_t faultStringMap[] =
     {"MCU2 SPI COMMS Timeout Fault"             ,DEF_MCU2_SPI_COMMS_TIMEOUT },
     {"Radio Fault"                              ,DEF_RADIO_FAULT            },
     {"MCU2 RAM Fault"                           ,DEF_MCU2_RAM_FAULT         },
-    //{"Degraded Smoke Chamber Fault"             ,DEF_DEG_SMOKE_CHAMBER_FAULT},
+    {"Degraded Smoke Chamber Fault"             ,DEF_DEG_SMOKE_CHAMBER_FAULT},
     {"Obstacle Detected Fault"                  ,DEF_OBSTACLE_DET_FAULT     },
-    //{"Soiling Detected Fault"                   ,DEF_SOILING_DET_FAULT      },
+    {"Soiling Detected Fault"                   ,DEF_SOILING_DET_FAULT      },
     {"Coverage Detected Fault"                  ,DEF_COVERAGE_DET_FAULT     },
     {"Temp Sensor Out Of Bounds Fault"          ,DEF_TEMP_SENSOR_OOB_FAULT  },
     {"Humidity Sensor Out Of Bounds Fault"      ,DEF_HUMIDITY_SENSOR_OOB_FAULT},
@@ -449,6 +509,7 @@ static const char *spiCmdString[] =
 static const char *AlarmTypeString[] = 
 {
     "Alarm End",
+    "Smoke Alarm",
     "Heat Alarm",
     "CO Alarm",
     "Test Alarm",
@@ -889,6 +950,11 @@ static cliStatus_t CLI_set_event( int argc, char **argv )
     else if( event == DEF_LBE_REMOTE_ALARM_SILENCE )
     {
       set_remote_alarm_status_MCU_2( REM_ALM_END );
+      trigger_remote_alarm( );
+    }
+    else if( event == DEF_LBE_SMOKE_REMOTE_ALARM )
+    {
+      set_remote_alarm_status_MCU_2( REM_ALM_SMOKE );
       trigger_remote_alarm( );
     }
     else if( event == DEF_LBE_HEAT_REMOTE_ALARM )
@@ -1612,6 +1678,7 @@ static cliStatus_t CLI_get_eeprom_index(int argc, char **argv)
     {
         "Main Logbook Index",
         "Demounting Index",
+        "Smoke Events Index",
         "Co Events Index",
         "Heat Events Index",
         "Faults Events Index",
@@ -1643,6 +1710,11 @@ static cliStatus_t CLI_get_eeprom_index(int argc, char **argv)
                 case 2:
                 {
                     index = DataLogging_GetDemountingIndex();
+                }
+                break;
+                case 3:
+                {
+                    index = DataLogging_GetSmokeEventsIndex();
                 }
                 break;
                 case 4:
@@ -1693,6 +1765,8 @@ static cliStatus_t CLI_GetBehaviorialOperationalState(int argc, char **argv)
     const char *const verbose_string[] = 
     {
         "IDLE",
+        "SMOKE ALARM",
+        "SMOKE ALARM SILENCE",
         "HEAT_ALARM",
         "HEAT ALARM SILENCE",
         "CO ALARM",
@@ -1831,6 +1905,9 @@ static cliStatus_t CLI_get_current_value(int argc, char **argv)
         cmdLineIf.printFunc("Batt B: %d\r\n", read_data.battB_val);
         cmdLineIf.printFunc("CO: %d\r\n", read_data.Co_val);
         cmdLineIf.printFunc("Heat: %d\r\n", read_data.Heat_val);
+        cmdLineIf.printFunc("Smoke: %d\r\n", read_data.Smoke_val);
+        cmdLineIf.printFunc("Degraded Chamber: %d\r\n", read_data.Degraded_chamber_val);
+        cmdLineIf.printFunc("Soiling: %d\r\n", read_data.Soiling_val);
         cmdLineIf.printFunc("Coverage Status: %d\r\n", read_data.Coverage_Status);
         cmdLineIf.printFunc("Obs Status: %d \r\n", read_data.Obs_Status);
         cmdLineIf.printFunc("Brightness: %d\r\n", read_data.brightness);
@@ -1838,9 +1915,10 @@ static cliStatus_t CLI_get_current_value(int argc, char **argv)
     }
     else
     {
-        cmdLineIf.printFunc("%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n", read_data.temp_val,read_data.battA_val,
-        read_data.battB_val,read_data.Co_val,read_data.Heat_val,read_data.Coverage_Status,read_data.Obs_Status,
-        read_data.brightness,read_data.Humidity_val);
+        cmdLineIf.printFunc("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n", read_data.temp_val,read_data.battA_val,
+        read_data.battB_val,read_data.Co_val,read_data.Heat_val,read_data.Smoke_val,read_data.Degraded_chamber_val,
+        read_data.Soiling_val,read_data.Coverage_Status,read_data.Obs_Status,read_data.brightness,read_data.Humidity_val
+        );   
     }
     return UARTCLI_OK;
 }

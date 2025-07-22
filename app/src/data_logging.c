@@ -334,6 +334,11 @@ static bool logMsgtoMCU = false;
 
 static bool DataLogging_WriteData(const void *pvdata, uint16_t address, uint16_t len);
 static void DataLogging_ReadData(void* pvdata, uint16_t address, uint16_t len);
+static void DataLogging_SetSmokeEventTimestamp(uint8_t index, uint32_t SmokeEventTimestamp);
+static uint32_t DataLogging_GetSmokeEventTimestamp(uint8_t index);
+static void DataLogging_SetSmokeRemoteEventCount(uint16_t SmokeRemoteEventCount);
+static void DataLogging_SetSmokeEventType(uint8_t index, uint8_t SmokeEventTypes);
+static uint8_t DataLogging_GetSmokeEventType(uint8_t index);
 static void DataLogging_SetCOEventTimestamp(uint8_t index, uint32_t COEventTimestamp);
 static uint32_t DataLogging_GetCOEventTimestamp(uint8_t index);
 static void DataLogging_SetCOLocalEventCount(uint16_t COLocalEventCount);
@@ -355,6 +360,7 @@ static void DataLogging_SetMainLogbookIndex(uint16_t MainLogbookIndex);
 static void DataLogging_SetDemountingIndex(uint8_t DemountingIndex);
 static void DataLogging_SetBatteryLevelIndex(uint8_t BatteryLevelIndex);
 static void DataLogging_SetBatteryImpedanceIndex(uint8_t BatteryImpedanceIndex);
+static void DataLogging_SetSmokeEventsIndex(uint8_t SmokeEventsIndex);
 static void DataLogging_SetCOEventsIndex(uint8_t COEventsIndex);
 static void DataLogging_SetHeatEventsIndex(uint8_t HeatEventsIndex);
 static void DataLogging_SetFaultsEventsIndex(uint8_t FaultEventsIndex);
@@ -2028,6 +2034,7 @@ uint32_t DataLogging_GetFeatureconfigurationFlags(void) {
 void DataLogging_ResetAllIndexes(void) {
 	DataLogging_SetMainLogbookIndex(0u);
 	DataLogging_SetDemountingIndex(0u);
+	DataLogging_SetSmokeEventsIndex(0u);
 	DataLogging_SetCOEventsIndex(0u);
 	DataLogging_SetHeatEventsIndex(0u);
 	DataLogging_SetFaultsEventsIndex(0u);
@@ -2173,6 +2180,32 @@ void DataLogging_SetBatteryImpedanceIndex(uint8_t BatteryImpedanceIndex) {
 uint8_t DataLogging_GetBatteryImpedanceIndex(void) {
 	uint8_t data = 0;
 	uint16_t addr = (uint16_t)(DATALOGGING_INDEXES_OFFSET + (uint16_t)(offsetof(dl_main_indexes_t, BatteryImpedanceIndex)));
+	DataLogging_ReadData(&data, addr, sizeof(data));
+	return data;
+}
+
+/****************************************************************************************************//**
+*                                          DataLogging_SetSmokeEventsIndex()
+*
+* @brief	Write smoke events index in the EEPROM
+*
+* @param	SmokeEventsIndex	smoke events index
+********************************************************************************************************/
+void DataLogging_SetSmokeEventsIndex(uint8_t SmokeEventsIndex) {
+	uint16_t addr = (uint16_t)(DATALOGGING_INDEXES_OFFSET + (uint16_t)(offsetof(dl_main_indexes_t, SmokeEventsIndex)));
+	DataLogging_WriteData(&SmokeEventsIndex, addr, sizeof(SmokeEventsIndex));
+}
+
+/****************************************************************************************************//**
+*                                          DataLogging_GetSmokeEventsIndex()
+*
+* @brief	Read smoke events index from the EEPROM
+*
+* @return	smoke events index
+********************************************************************************************************/
+uint8_t DataLogging_GetSmokeEventsIndex(void) {
+	uint8_t data = 0;
+	uint16_t addr = (uint16_t)(DATALOGGING_INDEXES_OFFSET + (uint16_t)(offsetof(dl_main_indexes_t, SmokeEventsIndex)));
 	DataLogging_ReadData(&data, addr, sizeof(data));
 	return data;
 }
@@ -2549,6 +2582,185 @@ uint16_t DataLogging_GetFaultyBatteryImpedanceLevel(void) {
 	uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, FaultBattImpedanceLevel)));
 	DataLogging_ReadData(buff, addr, sizeof(buff));
 	return CommonUtils_Uint8ToUint16(buff);
+}
+
+/****************************************************************************************************//**
+*                                    		DataLogging_SetSmokeEvent()
+*
+* @brief	Write smoke event in the EEPROM
+*
+* @param	event_type	Event Type
+********************************************************************************************************/
+void DataLogging_SetSmokeEvent(uint8_t event_type) {
+	uint8_t index;
+	uint16_t count;
+	uint32_t Timestamp;
+	index = DataLogging_GetSmokeEventsIndex(); /* Get events index 	*/
+	DEBUG_DATA_LOGGING("\n Smoke index", true, (uint32_t)index);
+	if((index == 0xFFu) || (index == 10u))
+	{
+	   index = 0u;
+	}
+	Timestamp = get_currentTime();
+	DataLogging_SetSmokeEventTimestamp((index % MAX_SUPPORTED_EVENTS), Timestamp);
+	DataLogging_SetSmokeEventType((index % MAX_SUPPORTED_EVENTS), event_type);
+
+	/* all the smoke events are remote */
+	count = DataLogging_GetSmokeRemoteEventCount();
+	DEBUG_DATA_LOGGING("\n Smoke Remote count", true, (uint32_t)count);
+	count++;
+	DataLogging_SetSmokeRemoteEventCount(count);
+
+	index++;
+	DataLogging_SetSmokeEventsIndex(index);
+}
+
+/****************************************************************************************************//**
+*                                    	DataLogging_GetSmokeEvent()
+*
+* @brief	Read all smoke events from the EEPROM
+*
+* @return	events structure
+********************************************************************************************************/
+void DataLogging_GetSmokeEvent(uint8_t index, dl_event_t *pstr_smoke_event) {
+
+	if (index < MAX_SUPPORTED_EVENTS)
+	{
+		pstr_smoke_event->Timestamp = DataLogging_GetSmokeEventTimestamp(index);			   /* get timestamp 	*/
+		pstr_smoke_event->EventType = DataLogging_GetSmokeEventType(index); /* get event type 	*/
+	}
+	else
+	{
+		/*Do nothing*/
+	}
+}
+
+/****************************************************************************************************//**
+*                                       DataLogging_SetSmokeEventTimestamp()
+*
+* @brief	Write smoke event time stamp in the EEPROM
+*
+* @param	index	index of EEPROM location to write
+* 			SmokeEventTimestamp	smoke event time stamp
+********************************************************************************************************/
+static void DataLogging_SetSmokeEventTimestamp(uint8_t index, uint32_t SmokeEventTimestamp) {
+
+	if (index < MAX_SUPPORTED_EVENTS)
+	{
+		uint8_t buff[4] = {0};
+		uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeEventTimestamps[index])));
+		CommonUtils_Uint32ToUint8(SmokeEventTimestamp, buff);
+		DataLogging_WriteData(buff, addr, sizeof(buff));
+	}
+	else
+	{
+		/*Do nothing*/
+	}
+}
+
+/****************************************************************************************************//**
+*                                       DataLogging_GetSmokeEventTimestamp()
+*
+* @brief	Read smoke event time stamp from the EEPROM
+*
+* @param	index	index of EEPROM location to read
+*
+* @return	smoke event time stamp
+********************************************************************************************************/
+static uint32_t DataLogging_GetSmokeEventTimestamp(uint8_t index) {
+
+  	uint32_t TimeStamp = 0;
+	if (index < MAX_SUPPORTED_EVENTS)
+	{
+		uint8_t buff[4] = {0};
+		uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeEventTimestamps[index])));
+		DataLogging_ReadData(buff, addr, sizeof(buff));
+		TimeStamp = CommonUtils_Uint8ToUint32(buff);
+	}
+	else
+	{
+		/*Do nothing*/
+	}
+	return TimeStamp;
+}
+
+/****************************************************************************************************//**
+*                                       	DataLogging_SetSmokeEventType()
+*
+* @brief	Write smoke event type in the EEPROM
+*
+* @param	index	index of EEPROM location to write
+* 			data	smoke event type
+********************************************************************************************************/
+static void DataLogging_SetSmokeEventType(uint8_t index, uint8_t SmokeEventTypes) {
+
+	if (index < MAX_SUPPORTED_EVENTS)
+	{
+		uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeEventTypes[index])));
+		DataLogging_WriteData(&SmokeEventTypes, addr, sizeof(SmokeEventTypes));
+	}
+	else
+	{
+		/*Do nothing*/
+	}
+}
+
+/****************************************************************************************************//**
+*                                           DataLogging_GetSmokeEventType()
+*
+* @brief	Read smoke event type from the EEPROM
+*
+*
+* @param	index	index of EEPROM location to read
+*
+* @return	smoke event type
+********************************************************************************************************/
+static uint8_t DataLogging_GetSmokeEventType(uint8_t index) {
+	uint8_t data = 0;
+	if (index < MAX_SUPPORTED_EVENTS)
+	{
+		uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeEventTypes[index])));
+		DataLogging_ReadData(&data, addr, sizeof(data));
+	}
+	else
+	{
+		/*Do nothing*/
+	}
+	return data;
+}
+/****************************************************************************************************//**
+*                                        DataLogging_SetSmokeRemoteEventCount()
+*
+* @brief	Write smoke remote event count in the EEPROM
+*
+* @param	data	smoke remote event count
+********************************************************************************************************/
+static void DataLogging_SetSmokeRemoteEventCount(uint16_t SmokeRemoteEventCount) {
+	uint8_t buff[2] = {0};
+	uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeRemoteEventCount)));
+	CommonUtils_Uint16ToUint8(SmokeRemoteEventCount, buff);
+	DataLogging_WriteData(buff, addr, sizeof(buff));
+
+}
+
+/****************************************************************************************************//**
+*                                        DataLogging_GetSmokeRemoteEventCount()
+*
+* @brief	Read smoke remote event count from the EEPROM
+*
+* @return	smoke remote event count
+********************************************************************************************************/
+uint16_t DataLogging_GetSmokeRemoteEventCount(void) {
+	uint8_t buff[2] = {0};
+	uint16_t count = 0U;
+	uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeRemoteEventCount)));
+	DataLogging_ReadData(buff, addr, sizeof(buff));
+	count = CommonUtils_Uint8ToUint16(buff);
+	if(count == 0xFFFFU)
+	{
+	   count = 0U;
+	}
+  return count;
 }
 
 /****************************************************************************************************//**
@@ -3912,6 +4124,7 @@ static bool send_logbook_to_mcu2( const uint8_t event_type )
 		case DEF_LBE_REMOTE_ALARM_TEST:
 		case DEF_LBE_REMOTE_ALARM_SILENCE:
 		case DEF_LBE_REMOTE_ALARM_RECEIVED:
+		case DEF_LBE_SMOKE_REMOTE_ALARM:
 		case DEF_LBE_HEAT_REMOTE_ALARM:
 		case DEF_LBE_CO_REMOTE_ALARM:
 
@@ -4234,30 +4447,6 @@ static uint16_t DataLogging_GetMinorFaultCounterAddr(dl_minor_fault_t MinorFault
 	uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, MinorFaultCounter)));
 	switch (MinorFault)
 	{
-      case FaultDegradedSmokeChamber:
-      {
-        addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultDegradedSmokeChamber));
-        break;
-      }
-
-      case FaultObstacleDetected:
-      {
-        addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultObstacleDetected));
-        break;
-      }
-
-      case FaultSoilDetected:
-      {
-        addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultSoilDetected));
-        break;
-      }
-
-      case FaultCoverageDetected:
-      {
-        addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultCoverageDetected));
-        break;
-      }
-
       case FaultTemperatureOutOfBound:
       {
         addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultTemperatureOutOfBound));
@@ -4288,17 +4477,6 @@ static uint16_t DataLogging_GetMinorFaultCounterAddr(dl_minor_fault_t MinorFault
         break;
       }
 
-      case FaultObstacleBISTOverdue:
-      {
-        addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultObstacleBISTOverdue));
-        break;
-      }
-
-      case FaultObstacleDetectionOverdue:
-      {
-        addr += (uint16_t)(offsetof(dl_minor_fault_counters_t, FaultObstacleDetectionOverdue));
-        break;
-      }
 
       case FaultBuzzerCheckOverdue:
       {

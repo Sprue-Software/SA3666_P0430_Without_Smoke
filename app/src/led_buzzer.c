@@ -1926,8 +1926,7 @@ static void LEDBuzz_HandleStandardPatterns(uint8_t pattern)
   if(((hal_get_ads_state() == Ads_onBase) || ((FaultHandler_GetFaultFlags() & DEF_DEM_TOO_LONG_FAULT) != 0u))
        || ((hal_get_ads_state() == Ads_offBase) && 
           (Standby_Mode == getBehavioural_System_Modes(false)) && (GetStandByModeCheckButton() == true)) 
-       || ((hal_get_ads_state() == Ads_offBase) && 
-       ((State_Radio_PriData_Configuration == op_state) || ((State_Airing_Configuration == op_state)))))
+       || ((hal_get_ads_state() == Ads_offBase) && (State_Airing_Configuration == op_state)))
   {
 
       SetStandByModeCheckButton(false);

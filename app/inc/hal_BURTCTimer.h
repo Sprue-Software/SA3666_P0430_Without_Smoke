@@ -42,12 +42,10 @@ typedef enum {
 	TMR_CO_Variance_Acquisition_event_0, /**<2 Not stopped during disable, started on power-up, periodic*/
 	TMR_AmbientLight_measure_event_0,/**<3 AmbientLight Power, periodic*/
 	TMR_TempHum_measure_BIST_event_0,/**<4 Temperature & Humidity BIST & measurement,periodic */
-#ifdef Usha
 	TMR_Smoke_measure_event_0,/**<5 Smoke Detection available in Operation Mode, periodic */
 	TMR_Smoke_BIST_event_0, /**<6 Smoke Chamber BIST available in Operation Mode, periodic */
 	TMR_Smoke_IncreasedSampleRate_event_0, /**<7 if Increased smoke detected in Operation Mode, */
 	TMR_Soling_Measurement_BIST_event_0,/**<8  Soiling Measurement & BIST is done during same time in Operation Mode, periodic */
-#endif
 	TMR_Heat_measure_BIST_event_0, /**<9 Heat Measurement & BIST, periodic */
 	TMR_CO_measure_event_0, /**<10 CO Measurement, periodic */
 	TMR_CO_BIST_event_0, /**<11 CO BIST, periodic */
@@ -58,10 +56,8 @@ typedef enum {
 	TMR_Airing_Configuration_Timeout_event_0, /**<16 Airing Configuration, Non-periodic */
 	TMR_heartbeat_event_0, /**<17 Started when entering active state, periodic */
 	TMR_Demount_too_long_event_0, /**<18 Demount too long event Non-periodic */
-#ifdef Usha
 	TMR_Smoke_HIGH_SUPER_event_0,/**<19 Smoke detected, Non-periodic */
 	TMR_Smoke_NONE_event_0,/**<20 No Smoke , Non-periodic */
-#endif
 	TMR_Heat_HIGH_SUPER_event_0,/**<21 Heat detected, Non-periodic */
 	TMR_Heat_NONE_event_0, /**<22 No Heat Configuration, Non-periodic */
 	TMR_COHB_HIGH_SUPER_event_0,/**<23 CO detected, Non-periodic */
@@ -89,9 +85,7 @@ typedef enum {
 	TMR_Production_complete_1,  /**<14 production complete, 120hrs Non-periodic */
 	TMR_FAILED_SPI_COMMS_TIMEOUT_1, /**<15 SPI fail timer timeout, 20min Non-periodic */
 	TMR_Disable_DBG_Port_1, /**<16 DBG port disable, 10s Non-periodic */
-#ifdef Usha
 	TMR_Smoke_Fast_Flame_Disable_1, /**<17 fast flame disable 3min -Non Periodic */
-#endif
 	TMR_Extended_Laser_BIST_1, /**<18 extended BIST of laser check */
 	NO_OF_EVENTS /** Insert any new event before this item. This item represents the enum length*/
 } BURTCTimer_Events_TypeDef;
@@ -116,7 +110,7 @@ typedef enum {
 #define TEMP_HUMIDITY_PERIOD 				        PERIOD_SET(120u) 	        /* Temperature & Humidity BIST & measurement,periodic= 2 min */
 #define HEARTBEAT_PERIOD                    PERIOD_SET(60u)           /* 3 every 60 sec */
 #define AMBIENT_LIGHT_7DAYS_PERIOD 			    PERIOD_SET(604800u)  	    /* AmbientLight in Darkness, periodic= every 7 days */
-#define RADIOAIRING_CONFIGURATION_TIMEOUT 	PERIOD_SET(60u)		        /* Airing Configuration, Non-periodic 60 sec */
+#define AIRING_CONFIGURATION_TIMEOUT 	PERIOD_SET(60u)		        /* Airing Configuration, Non-periodic 60 sec */
 #define SPI_COMMUMICATION_TX_RX  			      PERIOD_SET(120u) 	        /* SPI Comm Task , periodic = 2min */
 //#define WATCHDOG_TIMER 						          PERIOD_SET(180u)  	      /* Watchdog Task , periodic periodic = 3min, Need to change  */
 #define ALARM_SILENCE_TIMEOUT 				      PERIOD_SET(870)  	        /* TimeOut  = 14.30 min PTR-1385*/

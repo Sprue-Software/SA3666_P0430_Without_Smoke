@@ -332,7 +332,6 @@ static void Telegram_SetRamFaults (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_SetEnergyMode (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_SetResetCounter (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_SetAlarm_Forward (SPICOMMS_DATA_PACKET *p_packet);
-static void Telegram_SetRadioPrivateConfig(SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_SetAlarm_Radio_ERROR (SPICOMMS_DATA_PACKET *p_packet);
 
 
@@ -1096,50 +1095,13 @@ Telegram_GetToggleAiringRecommendation (SPICOMMS_DATA_PACKET *p_packet)
       {
           p_packet->TxPacket.Buffer[DEF_AI_LIGHT_RECOMMENDATION] = AIRING_FLAG_OFF;/* Airing recommendation clear   */
       }
-	  else if(airing_data == (uint8_t)RADIOPRIV_DATA_CONFIGMODE)
-      {
-          p_packet->TxPacket.Buffer[DEF_AI_LIGHT_RECOMMENDATION] = RADIOPRIV_DATA_CONFIGMODE;/* Radio Private data config mode */
-      }
       else
       {
           p_packet->TxPacket.Buffer[DEF_AI_LIGHT_RECOMMENDATION] = AIRING_FLAG_TOGGLE;/* Airing recommendation toggle   */
       }
 
       p_packet->TxPacket.Length = DEF_LEN_TOGGLE_AIRING_RECOMMENDATION; /* length   */
-    }
-}
-
-/****************************************************************************************************//**
- *                                 Telegram_SetRadioPrivateConfig()
- *
- * @brief This API will Set private radio data config
- * @param p_packet  packet to transmit
- * @return NULL
- ********************************************************************************************************/
-static void
-Telegram_SetRadioPrivateConfig(SPICOMMS_DATA_PACKET *p_packet)
-{
-  uint32_t radio_data = 0u;
-  uint8_t radio_config = 0u;
-  DEBUG_TELEGRAM("\n privateDataSwitch SPI", false, 0u);
-  radio_data = DataLogging_GetFeatureconfigurationFlags ();
-  if (p_packet != NULL)
-    {
-        radio_config = p_packet->RxPacket.Buffer[1u];
-
-        if ((radio_config == 1u)) /*set */
-        {
-            DEBUG_TELEGRAM("\n privateDataSwitch ON", false, 0u);
-            radio_data = (radio_data | (1u << RADIO_PRIVATE_DATA_LOCATION)); /* on */
-        }
-        else
-        {
-            DEBUG_TELEGRAM("\n privateDataSwitch OFF", false, 0u);
-            radio_data = (radio_data & (~(1u << RADIO_PRIVATE_DATA_LOCATION))); /* off   */
-        }
-
-        DataLogging_SetFeatureConfigurationFlags (radio_data);
-     }
+   }
 }
 
 /****************************************************************************************************//**
@@ -1781,13 +1743,6 @@ TELEGRAM_ProcessReceivedPacket (SPICOMMS_DATA_PACKET *p_packet)
           p_packet->TxPacket.Command = DEF_STANDARD_RESPONSE; /* send standard response           */
           TELEGRAM_PrepareTransmitPacket (p_packet);
           break;
-        case DEF_RADIO_CONFIG_SWITCH:
-          DEBUG_TELEGRAM("Commmand SPI from MCU2 privateDataSwitch", false, 0u);
-          Telegram_SetRadioPrivateConfig(p_packet);
-          p_packet->TxPacket.Command = DEF_STANDARD_RESPONSE;
-          TELEGRAM_PrepareTransmitPacket (p_packet);
-        break;
-
         default:
           {
             break;
@@ -2078,8 +2033,6 @@ update_system_state_for_MCU2 (void)
       SPI_SYSTEM_data = (uint16_t) (SPI_SYSTEM_data & ~(1u << (uint16_t) SPI_Ambient_Light_Darkness_State));
   }
 
-  /* No smoke version */
-  SPI_SYSTEM_data = (uint16_t) (SPI_SYSTEM_data & ~(1u << (uint16_t) SPI_Device_Configuration_State_Smoke));
 
   return SPI_SYSTEM_data;
 }
@@ -2321,6 +2274,7 @@ get_value_for_SPI (behaviour_state_enum_System_modes data_mode,
         tx_data->Soiling_val = SPI_INVALID_VAL_8_BYTE;
         tx_data->Coverage_Status = SPI_INVALID_VAL_8_BYTE;
         tx_data->Obs_Status = SPI_INVALID_VAL_8_BYTE;
+        tx_data->Soiling_val = SPI_INVALID_VAL_8_BYTE;
         tx_data->brightness = SPI_INVALID_VAL_8_BYTE;
       }
   }

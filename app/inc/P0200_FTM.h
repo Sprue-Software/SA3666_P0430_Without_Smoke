@@ -29,7 +29,7 @@
 #ifdef DEBUG_BUILD
 #define P0200_FTM_COMMAND_COUNT 85U
 #else
-#define P0200_FTM_COMMAND_COUNT 88U
+#define P0200_FTM_COMMAND_COUNT 84U
 #endif
 
 extern const nextGenCommsCommand_t P0200_FTMCommandTable[P0200_FTM_COMMAND_COUNT];

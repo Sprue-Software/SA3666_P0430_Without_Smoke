@@ -48,6 +48,8 @@ typedef struct
 
 }ambient_ftm_Data;
 
+extern bool dark_timer_running;  /* darkness timer status */
+
 void
 ambient_light_init(void);
 void

@@ -56,7 +56,6 @@
 #define DEF_LBE_DEMOUNTED_DET_HW_ERR_START			(12u)
 #define DEF_LBE_DEMOUNTED_DET_HW_ERR_END				(13u)   // Deprecated, use start event only
 #define DEF_LBE_USER_BIST							    			(14u)
-#ifdef Usha
 #define DEF_LBE_SMOKE_DET_START									(15u)   // Deprecated
 #define DEF_LBE_SMOKE_DET_END										(16u)   // Deprecated
 #define DEF_LBE_SMOKE_CHAM_CONT_START						(17u)   // Deprecated
@@ -65,7 +64,6 @@
 #define DEF_LBE_SMOKE_CHAM_HW_ERR_END						(20u)   // Deprecated, use start event only
 #define DEF_LBE_SUPER_SMOKE_START					 			(21u)   // Deprecated
 #define DEF_LBE_SUPER_SMOKE_END					 				(22u)   // Deprecated
-#endif
 #define DEF_LBE_SOILED_START					 					(23u)
 #define DEF_LBE_SOILED_END					 		    		(24u)
 #define DEF_LBE_SOILING_DET_HW_ERR_START     		(25u)
@@ -121,7 +119,6 @@
 #define DEF_LBE_MAX               							(83u)
 
 /* Device Coniguration */
-#define DEVICE_CONFIG_SMOKE											(0x00u)
 #define DEVICE_CONFIG_NO_SMOKE									(0x01u)
 
 /**
@@ -432,6 +429,7 @@ uint16_t DataLogging_GetMainLogbookIndex(void);
 uint8_t DataLogging_GetDemountingIndex(void);
 uint8_t DataLogging_GetBatteryLevelIndex(void);
 uint8_t DataLogging_GetBatteryImpedanceIndex(void);
+uint8_t DataLogging_GetSmokeEventsIndex(void);
 uint8_t DataLogging_GetCOEventsIndex(void);
 uint8_t DataLogging_GetHeatEventsIndex(void);
 uint8_t DataLogging_GetFaultsEventsIndex(void);
@@ -456,6 +454,8 @@ void DataLogging_SetFaultyBatteryVoltageLevel(uint16_t FaultBattVoltageLevel);
 uint16_t DataLogging_GetFaultyBatteryVoltageLevel(void);
 void DataLogging_SetFaultyBatteryImpedanceLevel(uint16_t FaultBattImpedanceLevel);
 uint16_t DataLogging_GetFaultyBatteryImpedanceLevel(void);
+void DataLogging_SetSmokeEvent(uint8_t event_type);
+void DataLogging_GetSmokeEvent(uint8_t index, dl_event_t *pstr_smoke_event);
 uint16_t DataLogging_GetSmokeRemoteEventCount(void);
 
 /************************************* CO Events APIs **********************************/

@@ -311,7 +311,6 @@ bool hal_AFE_RegisterResponseVar(AFERspMessage_t *response);
 
 void hal_AFE_dump( void );
 void hal_AFE_POR( void );
-void hal_IRCAP_Charge(uint16_t charge_time);
 void reset_POR( void );
 
 /*******************************************************************************

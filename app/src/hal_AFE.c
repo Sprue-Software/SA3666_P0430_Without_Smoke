@@ -202,7 +202,7 @@ void reset_POR( void )
   SPIComms_WriteAFE( ( uint8_t )AFE_WRITE_REGISTERS_8, 0x00u );
   
   /* Register 9 */
-  SPIComms_WriteAFE( ( uint8_t )AFE_WRITE_REGISTERS_9, 0x77u );
+  SPIComms_WriteAFE( ( uint8_t )AFE_WRITE_REGISTERS_9, 0x00u );
 }
 
 /*******************************************************************************
@@ -440,7 +440,14 @@ void AFE_Task(void *arg) {
                 break;
             case setup_Heartbeat:
                 hal_AFE_HeartBeatOn(true);
-                LETimer_delay_ms(4u);
+                if(ambient_light_get_status() == AMBIENT_LEVEL_DARKNESS)
+                {
+                    LETimer_delay_ms(1u);
+                }
+                else
+                {
+                    LETimer_delay_ms(9u);
+                }
                 hal_AFE_HeartBeatOn(false);
                 break;
             case setup_FW_TEST_Adc_GPIO_SOIL_A:
@@ -973,31 +980,10 @@ void hal_AFE_init( void )
     /* Enable CO Amp Permanently  on */
     keep_CO_powered_up();
 
-    /* charge the IRCAP for 20ms */
-    hal_IRCAP_Charge(20u);
-
     buzzer_off = true;
 
     /* Configure ABUF compensation */
     getABUFConfig( &abuf_config );
-}
-
-void hal_IRCAP_Charge(uint16_t charge_time) {
-
-  DEBUG_AFE("\nCharging IRCAP", false, 0u);
-
-  /* Initialization of the IRCAP charging for 20ms during the power on time only */
-  SPIComms_WriteAFE( AFE_WRITE_REGISTERS_1, 0x01u );        /* Start the low boost regulator and allow for soft start */
-
-  hal_AFE_delay_ms( 5u );                                   /* soft start time 4ms typ, plus 25% for margin */
-
-  SPIComms_WriteAFE( AFE_WRITE_REGISTERS_1, 0x05u );        /* Start the IRCAP charge */
-
-  hal_AFE_delay_ms( charge_time );                          /* Only during the startup charge the IR cap for 20ms */
-
-  SPIComms_WriteAFE( AFE_WRITE_REGISTERS_1, 0x00u );        /* Stop charging IRCAPP */
-
-  SPIComms_WriteAFE( AFE_WRITE_REGISTERS_9, 0x04u );        /* Smoke LED1 temp compensation 0.5%/C */
 }
 
 /**
@@ -1007,7 +993,6 @@ void hal_IRCAP_Charge(uint16_t charge_time) {
  *@req PTR-1400
  */
 uint32_t hal_AFE_ThermistorRead(void) {
-  RTOS_ERR err_temp;
   uint32_t temprature_reading = 0u;
   TSinCTL_SetLow();
   SPIComms_AcquireBus();

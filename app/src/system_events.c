@@ -113,7 +113,6 @@ static void handle_state_CO_Silence(OS_FLAGS flags_0, OS_FLAGS flags_1);
 static void handle_state_Domestic_Test(OS_FLAGS flags_0, OS_FLAGS flags_1);
 static void handle_state_domestic_extended_test (OS_FLAGS flags_0, OS_FLAGS flags_1);
 static void handle_State_Airing_Configuration(OS_FLAGS flags_0, OS_FLAGS flags_1);
-static void handle_Radio_PriData_Configuration(OS_FLAGS flags_0, OS_FLAGS flags_1);
 static void jumpToHeatAlarm( bool newAlarm, bool lowPriorityAlarm );
 static void jumpToCOAlarm(bool newAlarm, bool lowPriorityAlarm, OS_FLAGS flags);
 static void jumpToRemoteAlarm(void);
@@ -327,10 +326,6 @@ static void handle_System_Operational_Mode(OS_FLAGS flags_0, OS_FLAGS flags_1)
 	  case State_Airing_Configuration:/* State_Airing_Configuration: To enable & disable airing configuration*/
 	    handle_State_Airing_Configuration(flags_0, flags_1);
 		break;
-	  case State_Radio_PriData_Configuration:
-	    handle_Radio_PriData_Configuration(flags_0, flags_1);
-	  break;
-
 	  default:
 		/*Shouldn't reach here*/
 		break;
@@ -601,19 +596,19 @@ static void handle_State_idle(OS_FLAGS flags_0, OS_FLAGS flags_1)
 		  DEBUG_EVENTS("event button else", false, 0u);
 			hal_switches_set_pattern(Button_Released); /* reset the pattern */
 		}
-		if ((switch_state == Button_DoubleShortPress) 
-			&& (getBehavioural_System_Modes(false) == Operational_Mode))
-		{
-				hal_switches_set_pattern(Button_Released); /* reset the pattern */
-				DEBUG_EVENTS(" Radio Private Data config mode activate", false, 0u);
-				LEDBuzz_Post(PatternStopAll);
-				setBehavioural_Operational_State(State_Radio_PriData_Configuration);			
-				setRadioPriDataStatus(ACT_DAVT_RADIO_PRI);
-				/* Stop All Diagnostic Timers*/
-				Stop_Diagnostic_BIST();	
-				set_AiringConfig((uint8_t)RADIOPRIV_DATA_CONFIGMODE);
-				SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
-				BURTCTimer_Start(TMR_State_Timeout_event_0, false, RADIOAIRING_CONFIGURATION_TIMEOUT); /*Start config timeout*/
+		if ((switch_state == Button_DoubleShortPress) && (getBehavioural_System_Modes(false) == Operational_Mode))
+		{			
+			hal_switches_set_pattern(Button_Released); /* reset the pattern */
+			LEDBuzz_Post(PatternStopAll);
+			setBehavioural_Operational_State(State_Airing_Configuration);
+			
+			/* Stop All Diagnostic Timers*/
+			Stop_Diagnostic_BIST();
+			set_AiringConfig((uint8_t)AIRING_FLAG_ON);
+			SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);	
+			DEBUG_EVENTS("SPI:MCU1->MCU2:Airing Mode=",true, AIRING_FLAG_ON);
+			BURTCTimer_Stop(TMR_State_Timeout_event_0);
+			BURTCTimer_Start(TMR_State_Timeout_event_0, false, AIRING_CONFIGURATION_TIMEOUT); /*Start silence timeout*/
 		}
 	}
 }
@@ -750,16 +745,16 @@ static void handle_state_Heat_Silence(OS_FLAGS flags_0, OS_FLAGS flags_1)
 		}
 		SPIComms_Send_Data_to_MCU2(SPI_CMD_Alarm);
 		setBehavioural_Operational_State(state_Idle);
-    //P0200-6541 if no remote alarm, stop everything, otherwise do nothing and keep remote alarm pattern
-    if(isRemoteAlarmStateActive == false)
-    {
-        if(GetAssistanceLightStatus() == true)
-          {
-            (void)BURTCTimer_Stop(Assistance_Light_event_1);
-            GPIO_TurnAssistanceLEDoff();
-          }
-        LEDBuzz_Post(PatternAlarmHeatStop);
-    }
+	    //P0200-6541 if no remote alarm, stop everything, otherwise do nothing and keep remote alarm pattern
+	    if(isRemoteAlarmStateActive == false)
+	    {
+	        if(GetAssistanceLightStatus() == true)
+	          {
+	            (void)BURTCTimer_Stop(Assistance_Light_event_1);
+	            GPIO_TurnAssistanceLEDoff();
+	          }
+	        LEDBuzz_Post(PatternAlarmHeatStop);
+	    }
 		isHeatAlarmNotServiced = false;
 	}
 	/* Heat Silence Timeout*/
@@ -770,17 +765,17 @@ static void handle_state_Heat_Silence(OS_FLAGS flags_0, OS_FLAGS flags_1)
 		//LEDBuzz_Post(PatternAlarmHeatSilcenceTimeout);
 		DataLogging_SetEventLogbookRecord( DEF_LBE_ALARM_MUTED_END, NULL ); /* Log Alarm mute end. PTR-490 */
 
-    //P0200-6541 if in remote alarm
-    if(isRemoteAlarmStateActive == true)
-    {
-      isRemoteAlarmStateActive = false;
-      stopRemoteAlarmPattern();
-      LEDBuzz_Post(PatternAlarmHeat);
-    }
-    else
-    {
-      LEDBuzz_Post(PatternAlarmHeatSilcenceTimeout);
-    }
+	    //P0200-6541 if in remote alarm
+	    if(isRemoteAlarmStateActive == true)
+	    {
+	      isRemoteAlarmStateActive = false;
+	      stopRemoteAlarmPattern();
+	      LEDBuzz_Post(PatternAlarmHeat);
+	    }
+	    else
+	    {
+	      LEDBuzz_Post(PatternAlarmHeatSilcenceTimeout);
+	    }
 
 		jumpToHeatAlarm(false, false); /*Enter alarm state, but not as a new alarm*/
 	}
@@ -994,17 +989,17 @@ static void handle_state_CO_Silence(OS_FLAGS flags_0, OS_FLAGS flags_1)
 		//After carrying tests, see if need to add to check if in remote alarm. If not no code change otherwise do nothing
 		//ie put the following statements in if statement checking remote alarm state
 
-    //P0200-6541 if no remote alarm, stop everything, otherwise do nothing and keep remote alarm pattern
-    if(isRemoteAlarmStateActive == false)
-    {
-        if(GetAssistanceLightStatus() == true)
-          {
-            (void)BURTCTimer_Stop(Assistance_Light_event_1);
-            GPIO_TurnAssistanceLEDoff();
-          }
-        LEDBuzz_Post(PatternAlarmCOStop);
-    }
-	  isCoAlarmNotServiced = false;
+		//P0200-6541 if no remote alarm, stop everything, otherwise do nothing and keep remote alarm pattern
+		if(isRemoteAlarmStateActive == false)
+		{
+		    if(GetAssistanceLightStatus() == true)
+			{
+				(void)BURTCTimer_Stop(Assistance_Light_event_1);
+				GPIO_TurnAssistanceLEDoff();
+			}
+		    LEDBuzz_Post(PatternAlarmCOStop);
+		}
+		isCoAlarmNotServiced = false;
 	}
 	/* Co silence Timeouts*/
 	if ((flags_0 & (uint32_t) FLAGS_BIT_INDEX(TMR_State_Timeout_event_0)) != 0u)
@@ -1015,17 +1010,17 @@ static void handle_state_CO_Silence(OS_FLAGS flags_0, OS_FLAGS flags_1)
 		//LEDBuzz_Post(PatternAlarmCOSilenceTimeout);
 		DataLogging_SetEventLogbookRecord( DEF_LBE_ALARM_MUTED_END, NULL ); /* Log Alarm mute start. PTR-490 */
 
-    //P0200-6541 if in remote alarm
-    if(isRemoteAlarmStateActive == true)
-    {
-      isRemoteAlarmStateActive = false;
-      stopRemoteAlarmPattern();
-      LEDBuzz_Post(PatternAlarmCO);
-    }
-    else
-    {
-      LEDBuzz_Post(PatternAlarmCOSilenceTimeout);
-    }
+	    //P0200-6541 if in remote alarm
+	    if(isRemoteAlarmStateActive == true)
+	    {
+	      isRemoteAlarmStateActive = false;
+	      stopRemoteAlarmPattern();
+	      LEDBuzz_Post(PatternAlarmCO);
+	    }
+	    else
+	    {
+	      LEDBuzz_Post(PatternAlarmCOSilenceTimeout);
+	    }
 
 		/* log_advancedEvent(eventType_localAlarmSilenceExit, NULL); Log to EEPROM*/
 		jumpToCOAlarm(false, false, flags_0); /*Enter alarm state, but not as a new alarm*/
@@ -1101,7 +1096,7 @@ static void handle_state_Domestic_Test(OS_FLAGS flags_0, OS_FLAGS flags_1)
 	}
 	else
 	{
-     if((fault_val & DEF_HEAT_SENSOR_HW_FAULT) != 0U)
+       if((fault_val & DEF_HEAT_SENSOR_HW_FAULT) != 0U)
 	   {
 	       /* Do nothing, Heat fault will be set implicitly */
 	   }
@@ -1198,32 +1193,24 @@ static void handle_State_Airing_Configuration(OS_FLAGS flags_0, OS_FLAGS flags_1
 		{
 			hal_switches_set_pattern(Button_Released); /* reset the pattern */
 			DEBUG_EVENTS("\nToggle airing config in eeprom", false, 0u);
-			 set_AiringConfig((uint8_t)AIRING_FLAG_TOGGLE);
-			 BURTCTimer_Stop(TMR_State_Timeout_event_0);
-			 BURTCTimer_Start(TMR_State_Timeout_event_0, false, RADIOAIRING_CONFIGURATION_TIMEOUT);
-			 SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
+		    set_AiringConfig((uint8_t)AIRING_FLAG_TOGGLE);
+			BURTCTimer_Stop(TMR_State_Timeout_event_0);
+			BURTCTimer_Start(TMR_State_Timeout_event_0, false, AIRING_CONFIGURATION_TIMEOUT);
+			SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
+			DEBUG_EVENTS("SPI:MCU1->MCU2:Airing Mode=",true, AIRING_FLAG_TOGGLE);
 		}
-		else if (hal_switches_get_pattern() == Button_SingleShortPress)
+		else if ((hal_switches_get_pattern() == Button_SingleShortPress) ||
+					(hal_switches_get_pattern() == Button_DoubleShortPress))
 		{
 			hal_switches_set_pattern(Button_Released); /* reset the pattern */
+			BURTCTimer_Stop(TMR_State_Timeout_event_0);
 			DEBUG_EVENTS("\nEnd of Airing Config ", false, 0u);
 			set_AiringConfig((uint8_t)AIRING_FLAG_OFF);
 			SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
+			DEBUG_EVENTS("SPI:MCU1->MCU2:Airing Mode=",true, AIRING_FLAG_OFF);
 			setBehavioural_Operational_State(state_Idle);
 			FaultHandler_Activate_Pattern();
-			Start_Diagnostic_BIST();
-			BURTCTimer_Stop(TMR_State_Timeout_event_0);
-		}
-		else if (hal_switches_get_pattern() == Button_DoubleShortPress)
-		{
-	        hal_switches_set_pattern(Button_Released); /* reset the pattern */
-	        DEBUG_EVENTS("\nHandle Radio Private Data Config ", false, 0u);
-	        set_AiringConfig((uint8_t)RADIOPRIV_DATA_CONFIGMODE);
-	        SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
-	        setRadioPriDataStatus(ACT_DAVT_AIRING_STATE);
-	        setBehavioural_Operational_State(State_Radio_PriData_Configuration);
-	        BURTCTimer_Stop(TMR_State_Timeout_event_0);
-	        BURTCTimer_Start(TMR_State_Timeout_event_0, false, RADIOAIRING_CONFIGURATION_TIMEOUT); 
+			Start_Diagnostic_BIST();			
 		}
 		else
 	  {
@@ -1234,71 +1221,7 @@ static void handle_State_Airing_Configuration(OS_FLAGS flags_0, OS_FLAGS flags_1
 		DEBUG_EVENTS("\nEnd of Airing Configuration", false, 0u);
 		set_AiringConfig((uint8_t)AIRING_FLAG_OFF);
 		SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
-		setBehavioural_Operational_State(state_Idle);
-		FaultHandler_Activate_Pattern();
-		Start_Diagnostic_BIST();
-	}
-}
-
-/**
- * @brief Function definitions for Radio Private Configurations &events
- * @param flags_0 & flags_1
- * @return nothing to return
- * @req DCR119,
- */
-
-static void handle_Radio_PriData_Configuration(OS_FLAGS flags_0, OS_FLAGS flags_1)
-{
-  (void) flags_1;
-  if ((flags_0 & (uint32_t) FLAGS_BIT_INDEX(TMR_Button_Press_0)) != 0u)
-  {
-    if (hal_switches_get_pattern() == Button_LongPress)
-    {
-      hal_switches_set_pattern(Button_Released); /* reset the pattern */
-      DEBUG_EVENTS("\nToggle Radio config in eeprom", false, 0u);
-      setRadioPriDataStatus(TOGGLE_RADIO_PRI);
-      BURTCTimer_Stop(TMR_State_Timeout_event_0);
-      BURTCTimer_Start(TMR_State_Timeout_event_0, false, RADIOAIRING_CONFIGURATION_TIMEOUT); /*Start silence timeout*/
-    }
-    else if (hal_switches_get_pattern() == Button_SingleShortPress)
-    {
-      hal_switches_set_pattern(Button_Released); /* reset the pattern */
-
-      DEBUG_EVENTS("\nEnd of Radio PriData Config ", false, 0u);
-	    GPIO_TurnFaultLEDOff();
-      LEDBuzz_Post(PatternRadioPvtDataInactiveStop);
-      SPIComms_Send_Data_to_MCU2(SPI_CMD_Radio_Private_Data);
-      setBehavioural_Operational_State(state_Idle);
-	    FaultHandler_Activate_Pattern();
-      Start_Diagnostic_BIST();
-      BURTCTimer_Stop(TMR_State_Timeout_event_0);
-
-    }
-    else if (hal_switches_get_pattern() == Button_DoubleShortPress)
-    {
-      hal_switches_set_pattern(Button_Released); /* reset the pattern */
-      DEBUG_EVENTS("\nHandle state Airing Config ", false, 0u);
-      GPIO_TurnFaultLEDOff();
-      LEDBuzz_Post(PatternRadioPvtDataInactiveStop);
-      SPIComms_Send_Data_to_MCU2(SPI_CMD_Radio_Private_Data);
-      set_AiringConfig((uint8_t)AIRING_FLAG_ON);
-      SPIComms_Send_Data_to_MCU2(SPI_CMD_Toggle_Config_Air);
-      setBehavioural_Operational_State(State_Airing_Configuration);
-      BURTCTimer_Stop(TMR_State_Timeout_event_0);
-      BURTCTimer_Start(TMR_State_Timeout_event_0, false, RADIOAIRING_CONFIGURATION_TIMEOUT); /*Start silence timeout*/
-    }
-    else
-    {
-      /* to avoid MISRA violations */
-    }
-  }
-
-  if ((flags_0 & (uint32_t) FLAGS_BIT_INDEX(TMR_State_Timeout_event_0)) != 0u)
-  {
-		GPIO_TurnFaultLEDOff();	
-		LEDBuzz_Post(PatternRadioPvtDataInactiveStop);
-		SPIComms_Send_Data_to_MCU2(SPI_CMD_Radio_Private_Data);
-		DEBUG_EVENTS("\nEnd of Radio PriData Configuration", false, 0u);
+		DEBUG_EVENTS("SPI:MCU1->MCU2:Airing Mode=",true, AIRING_FLAG_OFF);
 		setBehavioural_Operational_State(state_Idle);
 		FaultHandler_Activate_Pattern();
 		Start_Diagnostic_BIST();
@@ -1603,9 +1526,6 @@ static void handleDeviceEnable(void)
 
 	if (getBehavioural_System_Modes(false) == Standby_Mode)
 	{
-	    /* Charge the IRCAP before smoke BIST/measurement */
-	    hal_IRCAP_Charge(20u);
-
 		/* Run BIST only run when production is complete */
 		if( prod_comp_bb == PROD_COMP_BB )
 		{
@@ -1634,9 +1554,6 @@ static void handleDeviceEnable(void)
 	}
 	else if (getBehavioural_System_Modes(false) == Operational_Mode)
 	{
-      /* Charge the IRCAP before smoke BIST/measurement */
-      hal_IRCAP_Charge(20u);
-
 	    if( prod_comp_bb == PROD_COMP_BB )
 	    {
 	        DEBUG_EVENTS("\nProd BB completed - Operation", false, 0u);
@@ -1948,56 +1865,6 @@ uint32_t DIAGNOSTIC_EVENTS(void)
 }
 
 /**
- * @brief Send Radio Private Data message to MCU2
- * @param  uint32:status
- * @return none
- */
-void setRadioPriDataStatus(uint32_t status)
-{
-   uint32_t radioPriData_status = 0u;
-   radioPriData_status = DataLogging_GetFeatureconfigurationFlags();
-   switch(status)
-   {
-     case ACT_DAVT_RADIO_PRI:
-       if ((radioPriData_status & (1u << RADIO_FLAG_BIT_POS)) != 0u)
-       {
-
-           DEBUG_EVENTS("\nPri Data Active ", false, 0u);
-           LEDBuzz_Post(PatternRadioPvtDataInactiveStop);
-           //LEDBuzz_Post(PatternRadioPvtDataActive);
-           GPIO_TurnFaultLEDOn(); 
-       }
-       else
-       {
-           DEBUG_EVENTS("\nPri Data Inactive ", false, 0u);
-		   GPIO_TurnFaultLEDOff(); 
-           LEDBuzz_Post(PatternRadioPvtDataInactive);
-       }
-       break;
-     case TOGGLE_RADIO_PRI:
-       if ((radioPriData_status & (1u << RADIO_FLAG_BIT_POS)) != 0u)
-       {
-           DEBUG_EVENTS("\nToggle Pri Data Active ", false, 0u);
-           radioPriData_status = (radioPriData_status & (~(1u << RADIO_FLAG_BIT_POS))); /* PrivateRadioData status off   */
-		   GPIO_TurnFaultLEDOff();		   
-           LEDBuzz_Post(PatternRadioPvtDataInactive);
-       }
-       else
-       {
-           DEBUG_EVENTS("\nToggle Pri Data Inactive ", false, 0u);
-           radioPriData_status = (radioPriData_status | (1u << RADIO_FLAG_BIT_POS));   /* PrivateRadioData status on   */
-           LEDBuzz_Post(PatternRadioPvtDataInactiveStop);
-           //LEDBuzz_Post(PatternRadioPvtDataActive);
-           GPIO_TurnFaultLEDOn();
-       }
-       DataLogging_SetFeatureConfigurationFlags(radioPriData_status);
-       break;
-     default:
-       break;
-   }
-}
-
-/**
  * @brief Handle the common transition actions for entering the Remote alarm state
  * Remote Alarm is only available when System is not in Local alarm
  * @param n/a
@@ -2037,6 +1904,16 @@ static void jumpToRemoteAlarm(void)
 
           switch(remoteAlarm)
           {
+            case REM_ALM_SMOKE:
+              isRemoteAlarmStateActive = true;
+              DEBUG_EVENTS("\nRemote Smoke", false, 0u);
+              DataLogging_SetEventLogbookRecord(DEF_LBE_SMOKE_REMOTE_ALARM, NULL);
+              OSTimeDly(1, OS_OPT_TIME_DLY, &err);
+              DataLogging_SetSmokeEvent(EVENT_TYPE_REMOTE);
+              BURTCTimer_Start(Assistance_Light_event_1, one_shot, ASSISTANCE_LIGHT_PERIOD); /* For Testing */
+              GPIO_TurnAssistanceLEDon();
+              LEDBuzz_Post( PatternAlarmRemoteSmoke );
+              break;
             case REM_ALM_HEAT:
               isRemoteAlarmStateActive = true;
               DEBUG_EVENTS("\nRemote Heat", false, 0u);

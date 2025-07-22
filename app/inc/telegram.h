@@ -68,7 +68,6 @@
 #define AIRING_FLAG_OFF                         (0x00u)
 #define AIRING_FLAG_ON                          (0x01u)
 #define AIRING_FLAG_TOGGLE                      (0x02u)
-#define RADIOPRIV_DATA_CONFIGMODE               (0x03u)
 
 #define DEF_LEN_LASER_RX_DATA                   (321u)   /* Not defined yet or tested   */
 

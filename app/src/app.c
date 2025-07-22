@@ -368,7 +368,7 @@ static void events_task(void *arg) {
 	/*Start-up: Start the three general timers */
 	//BURTCTimer_Start(TMR_timestamp_event_0, periodical, TIMESTAMP_PERIOD);
 	BURTCTimer_Start(WdogTimer_event_1, periodical, WDOGTIMER_EVENT_PERIOD_TEN_SEC);
-  BURTCTimer_Start(SpiComms_event_1, periodical, SPI_COMMUMICATION_TX_RX);
+    BURTCTimer_Start(SpiComms_event_1, periodical, SPI_COMMUMICATION_TX_RX);
 	BURTCTimer_Start(TMR_AmbientLight_measure_event_0, periodical, AMBIENT_MEASUREMENT_PERIOD);
 	BURTCTimer_Start(TMR_heartbeat_event_0, periodical, HEARTBEAT_EVENT );
 	BURTCTimer_Start(TMR_Disable_DBG_Port_1, one_shot, DBG_PORT_EVENT );
@@ -659,17 +659,28 @@ static void wdogTimer_task(void *arg)
 			/* Have we been in darkness for 7 days? */
 		  if( ( flags & FLAGS_BIT_INDEX( TMR_AmbientLight_7days_darkness_1 ) ) != 0u )
 			{
-				/* Yes, create logbook event */
-		    set_SevenDays_Darkness_Status(true);
-		    OSTimeDly(1, OS_OPT_TIME_DLY, &err);
-        DataLogging_SetEventLogbookRecord( DEF_LBE_AMB_LIGHT_7_DAYS_DARK, NULL );
-        if((FaultHandler_GetFaultFlags() & DEF_MINOR_FAULT) != 0u)
-        {
-            DEBUG_APP("\n7 days darkness ended", false, 0u);
-            LEDBuzz_Post(PatternMinorFault);
-        }
+		      if((getBehavioural_System_Modes(false) == Standby_Mode) ||
+		          (getBehavioural_System_Modes(false) == Transport_Mode))
+		      {
+	            /* Timer stopped */
+	            dark_timer_running = false;
+	            set_SevenDays_Darkness_Status(false);
+	            DEBUG_APP( "\n 7 days darkness fault not enabled:", true, dark_timer_running );
+		      }
+		      else
+		      {
+	            /* Yes, create logbook event */
+	            set_SevenDays_Darkness_Status(true);
+	            OSTimeDly(1, OS_OPT_TIME_DLY, &err);
+	            DataLogging_SetEventLogbookRecord( DEF_LBE_AMB_LIGHT_7_DAYS_DARK, NULL );
+	            if((FaultHandler_GetFaultFlags() & DEF_MINOR_FAULT) != 0u)
+	            {
+	                DEBUG_APP("\n7 days darkness ended", false, 0u);
+	                LEDBuzz_Post(PatternMinorFault);
+	            }
+	            DEBUG_APP( "\n 7 days darkness fault enabled:", true, dark_timer_running );
+		      }
 			}
-
 		  /* Have demount been one min long ? */
 		  if ((flags & FLAGS_BIT_INDEX(TMR_Demount_One_min_period_event_1)) != 0u)
 		  {

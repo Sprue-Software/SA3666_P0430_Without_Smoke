@@ -48,6 +48,7 @@ static OS_FLAGS DelayedFlags = 0;
 static bool bBistResult = false;
 static bool isDeviceSmokeEnable = false;
 
+uint16_t heat_thermistek_meas = 0u; /* temperature ADC value read from thermistor */
 /**
  * @brief setIsDeviceSmokeEnable
  * @details This module set the flag for device enable for smoke measurement

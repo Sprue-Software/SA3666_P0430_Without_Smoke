@@ -320,7 +320,6 @@ static void Telegram_GetTriggerOCDetection (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetLaser_RX_Data (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetDateAndTime (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetEnergyMode (SPICOMMS_DATA_PACKET *p_packet);
-static void Telegram_GetRadioPrivateConfig(SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetToggleAiringRecommendation (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_GetAiringLight (SPICOMMS_DATA_PACKET *p_packet);
 static void Telegram_SetTimezoneOffset (SPICOMMS_DATA_PACKET *p_packet);
@@ -341,7 +340,7 @@ static void Telegram_SetAlarm_Radio_ERROR (SPICOMMS_DATA_PACKET *p_packet);
  *                                                FUNCTIONS
  *********************************************************************************************************
 
-/****************************************************************************************************//**
+ ****************************************************************************************************
  *                                     TELEGRAM_PrepareTransmitPacket()
  *
  * @brief This API will prepare the packet for SPI transmission

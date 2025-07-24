@@ -2605,12 +2605,13 @@ void DataLogging_SetSmokeEvent(uint8_t event_type) {
 	DataLogging_SetSmokeEventTimestamp((index % MAX_SUPPORTED_EVENTS), Timestamp);
 	DataLogging_SetSmokeEventType((index % MAX_SUPPORTED_EVENTS), event_type);
 
-	/* all the smoke events are remote */
-	count = DataLogging_GetSmokeRemoteEventCount();
-	DEBUG_DATA_LOGGING("\n Smoke Remote count", true, (uint32_t)count);
-	count++;
-	DataLogging_SetSmokeRemoteEventCount(count);
-
+	if (event_type == EVENT_TYPE_REMOTE)
+	{
+		count = DataLogging_GetSmokeRemoteEventCount();
+		DEBUG_DATA_LOGGING("\n Smoke Remote count", true, (uint32_t)count);
+		count++;
+		DataLogging_SetSmokeRemoteEventCount(count);
+	}
 	index++;
 	DataLogging_SetSmokeEventsIndex(index);
 }

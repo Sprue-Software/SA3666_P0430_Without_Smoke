@@ -85,7 +85,13 @@ static cliStatus_t CLI_set_ctune(int argc, char **argv);
 static cliStatus_t CLI_dump_flash(int argc, char **argv);
 static cliStatus_t CLI_erase_flash(int argc, char **argv);
 static cliStatus_t CLI_set_production(int argc, char **argv);
+static cliStatus_t CLI_get_RawLaserData(int argc, char **argv);
+
 /*********************************************** Static Variables *************************************************/
+
+extern uint8_t laser_data_RX[DEF_LEN_LASER_RX_DATA];
+uint16_t raw_laser_data[161u] = {0};
+
 static uint8_t CliBuffer[CLI_BUFFER_LEN] = {0};
 static uint8_t CmdBuffer[CLI_BUFFER_LEN] = {0};
 static uint8_t SendResp[MAX_RSP_LEN] = {0};
@@ -435,7 +441,7 @@ static const cmdTable_t cliCommandTbl[] =
     },
     {
          .cmd            = "get-laser-raw-data",
-         .handler        = NULL,
+         .handler        = CLI_get_RawLaserData,
          .helpText       = "Laser-raw-data",
          .maxNoOfParams  = 1
     },
@@ -487,6 +493,7 @@ static const char *spiCmdString[] =
     "SPI Cmd Radio Link Error",
     "SPI Cmd Trig OC Detection",
     "SPI Cmd OC detection Result",
+    "SPI Cmd Laser Calibration",
     "SPI Cmd Set Dateand Time",
     "SPI Cmd Radio Duration",
     "SPI Cmd Funtional Test", 
@@ -1481,6 +1488,12 @@ static cliStatus_t CLI_dump_all_spi_msg(int argc, char **argv)
                        cmdLineIf.printFunc("SPI Logbook Record\r\n");
                     }
                     break;
+                    case SPICmdTrigOCDetection:
+                    {
+                       cmdLineIf.printFunc("SPI Laser Detection\r\n");
+                       cmdLineIf.printFunc("%d.%d.%d \r\n", SPIMsg->app_data[0], SPIMsg->app_data[1], SPIMsg->app_data[2]);
+                    }
+                    break;
                     default:
                     {
                         cmdLineIf.printFunc("%d> SPI CMD Type cannot be decoded. Dumping raw data\r\n", (i+1));
@@ -2032,6 +2045,58 @@ static cliStatus_t CLI_set_production( int argc, char **argv )
 
   return( UARTCLI_OK );
 }
+
+static cliStatus_t CLI_get_RawLaserData(int argc, char **argv)
+{
+  bool paramValid = true;
+  if(argc >1)
+  {
+      uint32_t sensorValue = (uint32_t)strtol(argv[1], NULL, 10);
+      switch(sensorValue)
+      {
+        case 1U:
+        Set_OC_Parameter(OC_Reading, 0u, 0u, 0u, 1U);
+        break;
+        case 2U:
+        Set_OC_Parameter(OC_Reading, 0u, 0u, 0u, 2U);
+        break;
+        case 3U:
+        Set_OC_Parameter(OC_Reading, 0u, 0u, 0u, 3U);
+        break;
+        default:
+        paramValid = false;
+        break;
+      }
+
+      if(paramValid)
+      {
+           set_obs_det_ftm_timeover(false);
+           SPIComms_Send_Data_to_MCU2(SPI_CMD_Trig_Detection);
+      }
+
+      while( get_obs_det_ftm_timeover() == false)
+      {
+         ;
+      }
+
+      for (uint16_t counter = 1u, laser_data=1u; counter < 161; laser_data++, counter++)
+      {
+         raw_laser_data[counter] = ((laser_data_RX[laser_data*2] << 8u) | laser_data_RX[(2*laser_data) - 1]);
+      }
+
+      for(uint16_t counter = 1u; counter < 161; counter++)
+      {
+          cmdLineIf.printFunc("\nRawReading[%d] = 0x%X", counter, raw_laser_data[counter]);
+      }
+  }
+  else
+  {
+          cmdLineIf.printFunc("Please pass a value of (0/1) to set/reset simulated heat mode\r\n");
+  }
+
+  return( UARTCLI_OK );
+}
+
 
 static void WriteFormatted (const char * format, ...)
 {

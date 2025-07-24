@@ -70,6 +70,7 @@ void GPIO_Init(void) {
     GPIO_PinModeSet(MCU1_SOILB_ENABLE_PORT, MCU1_SOILB_ENABLE_PIN, gpioModePushPull, 0u);   /* Deprecated soiling feature */
 
     GPIO_PinModeSet(DEF_AFE_ENABLE_PORT, DEF_AFE_ENABLE_PIN, gpioModePushPull, 0u);								/* Buzzer 							*/
+
     GPIO_PinModeSet(DEF_SPI_CS_AFE_PORT, DEF_SPI_CS_AFE_PIN, gpioModePushPull, 1u);						/* AFE SPI chip select 				*/
     GPIO_PinModeSet(DEF_HEAT_POWER_PORT, DEF_HEAT_POWER_PIN, gpioModePushPull, 0u);					/* Thermistor power 				*/
 

@@ -52,7 +52,11 @@
 #define RADIO_FLAG_BIT_POS        (4U)
 #define ACT_DAVT_RADIO_PRI        (1U)
 #define TOGGLE_RADIO_PRI          (2U)
+#define LASER_MAX_RETRY           (2U)
 #define USER_BIST_MAX_TRY         (3U)
+
+#define EXTENDED_LASER_BIST_WAIT_PERIOD (10000u) /* extended BIST laser wait time 10sec */
+
 
 /*******************************************************************************
  ***************************  LOCAL VARIABLES   ********************************
@@ -67,6 +71,8 @@ static heat_state_enum HeatState = Heat_none;
 
 static Button_state_t switch_state = Button_Released;
 
+static bool laserbistfail = false;
+uint8_t laser_retry_count = 0U;
 uint8_t  logbook_data_Co[8u] = {0};
 
 static bool isHeatMutePressed = false;
@@ -82,6 +88,7 @@ static bool isCoAlarmtoServeafterSmokeHeat = false;
 static bool isFaultSilenceActive = false; 
 static bool isStanbyModeCheckButton = false;
 
+static bool isLaserExtndBistRunning = false;
 /*******************************************************************************
  *********************   LOCAL FUNCTION PROTOTYPES   ***************************
  ******************************************************************************/
@@ -541,7 +548,19 @@ static void handle_State_idle(OS_FLAGS flags_0, OS_FLAGS flags_1)
 			}
 			else if (switch_state == Button_userExtTest)
 			{
-				  handle_state_domestic_extended_test(flags_0,flags_1);
+				if (isLaserExtndBistRunning == false)
+				{
+				   handle_state_domestic_extended_test(flags_0,flags_1);
+				}
+			}
+			else if (switch_state == Button_userExtndTestLaser)
+			{
+			    if ((getBistResult() == true) && (isLaserExtndBistRunning == false))
+			    {
+			      isLaserExtndBistRunning = true;
+			      DEBUG_EVENTS("Laser BIST 10sec timer start", false, 0u); /* Laser BIST wait timer */
+			      LETimer_start(LETIMER_EXT_USER_LASER_TEST, EXTENDED_LASER_BIST_WAIT_PERIOD);
+			    }
 			}
 			else
 			{
@@ -1132,6 +1151,31 @@ void handle_state_domestic_extended_test (OS_FLAGS flags_0, OS_FLAGS flags_1)
   setBehavioural_Operational_State(state_Idle); /* go back to the idle state after finishing the test */
 }
 
+
+/**
+ * @brief Function definitions for Domestic extended test & events
+ * @param flags_0 & flags_1
+ * @return nothing to return
+ * @req PTR-1431
+ */
+void handle_state_laser_extended_test(void)
+{
+  /* Call the laser BIST and take actions */
+  DEBUG_EVENTS("Start Laser BIST", false, 0u);
+
+  /* Disable the extended user BIST before starting the laser detection  */
+  LEDBuzz_Post(PatternStopAll);
+  GPIO_TurnAssistanceLEDoff();
+  setEndExtUsrTest(false);
+  hal_switches_set_pattern(Button_Released); /* reset the pattern */
+  
+  BURTCTimer_Start(Start_Laser_BIST_1, one_shot, EVENT_START_LASER_BIST_PERIOD);
+  BURTCTimer_Start(Check_BIST_Results_1, one_shot, EVENT_CHECK_BIST_RESULT_PERIOD);
+  setBehavioural_Operational_State(state_Idle); /* go back to the idle state after finishing the test */
+}
+
+
+
 /**
  * @brief Function definitions for Airing Configurations &events
  * @param flags_0 & flags_1
@@ -1262,8 +1306,10 @@ static void jumpToHeatAlarm(bool newAlarm, bool lowPriorityAlarm)
 
 static void handleDeviceDisable(void)
 {
+  (void)BURTCTimer_Stop(Start_Laser_BIST_1);
   (void)BURTCTimer_Stop(Check_BIST_Results_1);
-
+  set_laser_status_validated(false);
+  laser_retry_count = 0U;
   /* Stop all timers except timestamp, variance, Heart Beat. */
   Stop_Diagnostic_BIST();
 
@@ -1335,6 +1381,9 @@ static void handleDeviceDisable(void)
 	isCoAlarmNotServiced = false;
 	isCoAlarmtoServeafterSmokeHeat  = false;
 
+	/* disable the extnd user BIST running status */
+	isLaserExtndBistRunning = false; 
+
 	co_demount_init();
 
 	if(GetAssistanceLightStatus() == true)
@@ -1351,6 +1400,19 @@ static void handleDeviceDisable(void)
 }
 
 /**
+ * @brief   Starts laser bist test
+ * @details this module send laser hw test command to MCU2
+ * @parem n/a
+ * @return n/a
+ */
+void startLaserBIST(void)
+{
+  DEBUG_EVENTS("\n Start laser Bist", false, 0u);
+  Set_OC_Parameter(OC_BIST,0u,0u,0u,0u);
+  SPIComms_Send_Data_to_MCU2(SPI_CMD_Trig_Detection);
+}
+
+/**
  * @brief Checks Bist results
  * @details this module checks all HW bist result and if passes then system mode
  *          transition from commissioning to operating mode
@@ -1360,12 +1422,24 @@ static void handleDeviceDisable(void)
  */
 void checkBISTResults(void)
 {
+
+  LASER_TEST laserBistResult = END_OF_LASER_TEST;
   DEBUG_EVENTS("\nCheck BIST Result Enter", false, 0u);
+	laserBistResult = get_laser_status();
 	uint32_t fault_val = FaultHandler_GetFaultFlags ();
 
-  if((getBistResult() == true) && (!(fault_val & DEF_MAJOR_FAULT)))
+
+  if((getBistResult() == true) && (get_laser_status_validated() == true) &&
+    (laserBistResult == LASER_NO_DETETCION) && (!(fault_val & DEF_MAJOR_FAULT)))
   {
       DEBUG_EVENTS("\nBIST Passed", false, 0u);
+
+      if(laserbistfail == true)
+      {
+          FaultHandler_FaultClear(ObstacleDetectionHwFault);
+          DataLogging_SetEventLogbookRecord( DEF_LBE_OBSTACLE_DET_HW_ERR_END, NULL );
+          laserbistfail = false;
+      }
 
       if(getBehavioural_System_Modes(false) == Operational_Mode)
       {
@@ -1384,24 +1458,46 @@ void checkBISTResults(void)
   }
   else
   {
-      if(getBehavioural_System_Modes(false) == Operational_Mode)
+      if((laserBistResult == LASER_SENSOR_FAILUARE) && (laser_retry_count < LASER_MAX_RETRY))
       {
-          setBehavioural_Operational_State(state_Idle);
-          Start_Diagnostic_BIST();
-          FaultHandler_Activate_Pattern();
-      }
-      else if(getBehavioural_System_Modes(false) == Commisioning_Mode)
-      {
-          /*Stop The Diagnostic Timers & Stay in commissioning mode */
-          DEBUG_EVENTS("\nBIST failed", false, 0u);
-          SPIComms_Send_Data_to_MCU2(SPI_CMD_Current_value);
-          LEDBuzz_Post(PatternCommissioningFail);
+          BURTCTimer_Start(Start_Laser_BIST_1, one_shot, EVENT_START_LASER_BIST_PERIOD);
+          BURTCTimer_Start(Check_BIST_Results_1, one_shot, EVENT_CHECK_BIST_RESULT_PERIOD);
+          laser_retry_count++;
       }
       else
       {
+          /* laser HW error is previously not set */
+          if (((fault_val & DEF_OBSTACLE_DET_HW_FAUT) == 0u) &&(laserBistResult == LASER_SENSOR_FAILUARE))
+          {
+              if(laserbistfail == false)
+              {
+                FaultHandler_FaultSet(ObstacleDetectionHwFault);
+                DataLogging_SetEventLogbookRecord( DEF_LBE_OBSTACLE_DET_HW_ERR_START, NULL );
+                laserbistfail = true;
+              }
+          }
 
+          if(getBehavioural_System_Modes(false) == Operational_Mode)
+          {
+              setBehavioural_Operational_State(state_Idle);
+              Start_Diagnostic_BIST();
+              FaultHandler_Activate_Pattern();
+          }
+          else if(getBehavioural_System_Modes(false) == Commisioning_Mode)
+          {
+              /*Stop The Diagnostic Timers & Stay in commissioning mode */
+              DEBUG_EVENTS("\nBIST failed", false, 0u);
+              SPIComms_Send_Data_to_MCU2(SPI_CMD_Current_value);
+              LEDBuzz_Post(PatternCommissioningFail);
+          }
+          else
+          {
+
+          }
       }
   }
+
+  isLaserExtndBistRunning = false; 
 }
 
 /**
@@ -1436,6 +1532,7 @@ static void handleDeviceEnable(void)
 		    DEBUG_EVENTS("\nProd BB completed - StandBy", false, 0u);
 		    setBehavioural_System_Modes(Commisioning_Mode);
 		    LEDBuzz_Post(PatternFullSelfTestRunning);
+			  BURTCTimer_Start(Start_Laser_BIST_1, one_shot, EVENT_START_LASER_BIST_PERIOD);
 			  BURTCTimer_Start(Check_BIST_Results_1, one_shot, EVENT_CHECK_BIST_RESULT_PERIOD);
 			  (void)diagnostics(Standby_Mode, Ads_onBase, 0);
 			  LEDBuzz_Post(PatternFullSelfTestRunningStop);
@@ -1460,6 +1557,7 @@ static void handleDeviceEnable(void)
 	    if( prod_comp_bb == PROD_COMP_BB )
 	    {
 	        DEBUG_EVENTS("\nProd BB completed - Operation", false, 0u);
+	        BURTCTimer_Start(Start_Laser_BIST_1, one_shot, EVENT_START_LASER_BIST_PERIOD);
 	        BURTCTimer_Start(Check_BIST_Results_1, one_shot, EVENT_CHECK_BIST_RESULT_PERIOD);
 	        (void)diagnostics(Operational_Mode, Ads_onBase, 0);
 	    }
@@ -1617,6 +1715,10 @@ void Start_Diagnostic_BIST(void)
 	period = BUZZER_BIST_PERIOD;  /* Default Value */
 	BURTCTimer_Start(TMR_BUZZER_BIST_event_0, periodical, period);
 
+	/* Obstacle/Laser  BIST*/
+	BURTCTimer_Start(TMR_Obstacle_Coverage_BIST_event_0, periodical,
+	OBSTACLE_COVARAGE_PERIOD); /* test*/
+
 	/* Temp Humid */
 	BURTCTimer_Start(TMR_TempHum_measure_BIST_event_0, periodical,
 	TEMP_HUMIDITY_PERIOD);
@@ -1756,6 +1858,7 @@ uint32_t DIAGNOSTIC_EVENTS(void)
 	data_bytes_val |= (uint32_t) FLAGS_BIT_INDEX(TMR_CO_BIST_event_0);
 	data_bytes_val |= (uint32_t) FLAGS_BIT_INDEX(TMR_Heat_measure_BIST_event_0);
 	data_bytes_val |= (uint32_t) FLAGS_BIT_INDEX(TMR_TempHum_measure_BIST_event_0);
+	data_bytes_val |= (uint32_t) FLAGS_BIT_INDEX(TMR_Obstacle_Coverage_BIST_event_0);
 	data_bytes_val |= (uint32_t) FLAGS_BIT_INDEX(TMR_BUZZER_BIST_event_0);
 	data_bytes_val |= (uint32_t) FLAGS_BIT_INDEX(TMR_heartbeat_event_0);
 	return data_bytes_val;

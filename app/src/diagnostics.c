@@ -46,8 +46,29 @@
 
 static OS_FLAGS DelayedFlags = 0;
 static bool bBistResult = false;
+static bool isDeviceSmokeEnable = false;
 
-uint16_t heat_thermistek_meas = 0u; /* temperature ADC value read from thermistor */
+/**
+ * @brief setIsDeviceSmokeEnable
+ * @details This module set the flag for device enable for smoke measurement
+ * @Param bool
+ * @return n/a
+ */
+void setIsDeviceSmokeEnable(bool val)
+{
+  isDeviceSmokeEnable = val;
+}
+
+/**
+ * @brief getIsDeviceSmokeEnable
+ * @details This module return flag to check for device enable for smoke measurement
+ * @Param n/a
+ * @return true = smoke measurement enable: false = smoke measurement disable
+ */
+bool getIsDeviceSmokeEnable(void)
+{
+  return isDeviceSmokeEnable;
+}
 
 /**
  * @brief SetBistResult
@@ -324,6 +345,13 @@ bool diagnostics(behaviour_state_enum_System_modes modes, Ads_state_t ADS_status
            if ((flags & FLAGS_BIT_INDEX(TMR_BUZZER_BIST_event_0)) != 0u)
            {
                runBuzzerBist();
+           }
+           if ((flags & FLAGS_BIT_INDEX(TMR_Obstacle_Coverage_BIST_event_0)) != 0u)
+           {
+               Set_OC_Parameter(OC_detection ,0u,0u,0u,0u);
+               SPIComms_Send_Data_to_MCU2(SPI_CMD_Trig_Detection);
+               set_obs_det_ftm_period_timeover(false);
+               DEBUG_DIAG("\n Obstacle + Coverage BIST  ", false, 0u);
            }
        }
        /* This will happen only when device- Standby mode + ADS off only Battery +Temp+SPI will be active */

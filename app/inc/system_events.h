@@ -94,9 +94,11 @@ void Stop_All_timers_except_timestamp(void);
 uint32_t OPERATE_EVENTS (void);
 uint32_t DIAGNOSTIC_EVENTS (void);
 void Start_Diagnostic_BIST(void);
+void startLaserBIST(void);
 void checkBISTResults(void);
 co_state_enum getCoState(void);
 void SetStandByModeCheckButton(bool status);
 bool GetStandByModeCheckButton(void);
+void handle_state_laser_extended_test(void);
 
 #endif /* APP_INC_SYSTEM_EVENTS_H_ */

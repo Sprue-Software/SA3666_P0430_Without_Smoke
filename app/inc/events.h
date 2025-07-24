@@ -28,6 +28,7 @@ extern OS_FLAG_GRP switchFlags;
 #define EVENT_CO_BIST_0  					(1u << 11) 	/**<11 CO BIST, periodic */
 #define EVENT_CO_INCREASED_ACQ_RATE_0  		(1u << 12)	/**<12 Increased CO detected change rate of acquisition  , periodic */
 #define EVENT_BUZZER_BIST_0 				(1u << 13)	/**<13 Buzzer BIST  , periodic */
+#define EVENT_OBSTACLE_COVERAGE_BIST_MEASUREMENT_0 (1u << 14)/**<14 Obstacle & Coverage  Detection/BIST , periodic */
 #define EVENT_FAULT_SILENCE_TIMEOUT_0 		(1u << 15)	/**<4 Started when button pressed to silence battery fault chirp, one-shot*/
 #define EVENT_AIRING_CONFIGURATION_TIMEOUT_0 (1u << 16) /**<16 Airing Configuration, Non-periodic */
 #define EVENT_AMBIENT_MEASUREMENT_0 		(1u << 17)  /**<17 AmbientLight Power, periodic */
@@ -47,6 +48,7 @@ extern OS_FLAG_GRP switchFlags;
 
 #define EVENT_SPI_COMS_1 (1u ) /**<1 SPI Comm Task , periodic Event 1 */
 #define EVENT_WATCHDOG_1 (1u << 1)  /**<2 Watchdog Task , periodic */
+#define EVENT_USER_EXTND_LASER_BIST_1 (1u << 17)  /**<17 extended user bist laser test wait time */
 /*********************************** END of Flag 1*************************************************/
 
 #endif /* APP_INC_EVENTS_H_ */

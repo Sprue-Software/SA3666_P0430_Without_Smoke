@@ -646,6 +646,11 @@ static void wdogTimer_task(void *arg)
 			    SPIComms_Send_Data_to_MCU2( SPI_CMD_Countersdates );
 			}
 
+			if ((flags & FLAGS_BIT_INDEX(Start_Laser_BIST_1)) != 0u)
+			{
+			    startLaserBIST();
+			}
+
 			if ((flags & FLAGS_BIT_INDEX(Check_BIST_Results_1)) != 0u)
 			{
 			    checkBISTResults();
@@ -709,6 +714,11 @@ static void wdogTimer_task(void *arg)
 		      DEBUG_APP("\nDBG SWCLK Pin Status ", true, dbgStatus);
 
 
+		  }
+		  if ((flags & FLAGS_BIT_INDEX(TMR_Extended_Laser_BIST_1)) != 0u)
+		  {
+		  	  DEBUG_APP("Laser BIST started", false, 0u);
+		  	  handle_state_laser_extended_test();
 		  }
 		}
 	}

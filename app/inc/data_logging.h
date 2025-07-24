@@ -380,6 +380,10 @@ uint16_t DataLogging_GetDeadBatteryThreshold(void);
 void DataLogging_SetDeadBatteryBistPeriod(uint8_t DeadBatteryBistPeriod);
 uint8_t DataLogging_GetDeadBatteryBistPeriod(void);
 
+/************************************* Laser Calibration APIs**********************************/
+void DataLogging_SetLaserCalData(const uint8_t LaserCalibrationData[LASER_CALIBRATION_DATA_LEN]);
+void DataLogging_GetLaserCalData(uint8_t LaserCalibrationData[LASER_CALIBRATION_DATA_LEN]);
+
 /************************************* Temperature & Humidity APIs**********************************/
 void DataLogging_SetTempConfig(const dl_temperature_cfg_data_t *pstr_temp_config);
 void DataLogging_GetTempConfig(dl_temperature_cfg_data_t *pstr_temp_config);

@@ -261,6 +261,16 @@ static void LETimer_callback(uint32_t eventsComplete)
     APP_RTOS_ASSERT_DBG((RTOS_ERR_CODE_GET(err) == RTOS_ERR_NONE), 1);
   }
 
+  if ((eventsComplete & (1u << (uint32_t) LETIMER_EXT_USER_LASER_TEST)) != 0u)
+  {
+    OSFlagPost(&Event_Flags_SubGroup[1], /*   Pointer to user-allocated event flag.         */
+    EVENT_USER_EXTND_LASER_BIST_1, /*   event bit-mask.                                */
+    OS_OPT_POST_FLAG_SET, /*   Set the flag.                                 */
+    &err);
+    /* Check error code. */
+    APP_RTOS_ASSERT_DBG((RTOS_ERR_CODE_GET(err) == RTOS_ERR_NONE), 1);
+  }
+
 	/*ABR.  Add top group set flags if any subgroup was set*/
 }
 

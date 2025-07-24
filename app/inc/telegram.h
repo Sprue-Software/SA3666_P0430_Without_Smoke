@@ -59,6 +59,12 @@
 #define DEF_RESET_COUNTER                  		  (23u)
 #define DEF_ALARM_FORWARDING                    (24u)
 
+
+#define LASER_DISTANCE 3u
+#define LASER_DITECTION 1u
+#define LASER_BIST 2u
+#define LASER_GAIN_OFFSET 4u
+
 #define AIRING_FLAG_OFF                         (0x00u)
 #define AIRING_FLAG_ON                          (0x01u)
 #define AIRING_FLAG_TOGGLE                      (0x02u)
@@ -76,6 +82,20 @@ typedef enum
  Tx_Power_Down,
  END_OF_RADIO_TEST
 } RADIO_TEST;
+
+/**
+ * These are the Laser Module  States
+ */
+typedef enum
+{
+ LASER_NO_DETETCION= 0,  //0x00 00 - No Detection
+ LASER_OBSTACLE_DETETCION,//0x00 01 - Obstacle Detection
+ LASER_COVERAGE_DETETCION,//0x00 02 - Coverage Detection
+ LASER_END_OF_DETECTION,//0x00 03 - End Detection (Obstacle/Coverage)
+ LASER_SENSOR_FAILUARE,//0xFF FF ? Sensor Failure
+ END_OF_LASER_TEST
+} LASER_TEST;
+
 
 /**
  * These are the variousSystem States
@@ -161,10 +181,19 @@ bool set_remote_alarm_status_MCU_2( uint8_t alarm );
 void clr_remote_alarm_status_MCU_2( void );
 void Set_OC_Parameter(OC_TEST command ,uint8_t para_1,uint8_t para_2,uint8_t para_3,uint8_t para_4);
 void get_OC_Parameter(Set_Parameter_for_OC *OC_data_rt);
+LASER_TEST get_laser_status();
+uint16_t get_laser_distance(void);
 void trigger_remote_alarm(void);
+void set_laser_distance(uint16_t distance);
 void get_value_for_SPI (behaviour_state_enum_System_modes data_mode, uint32_t fault, Current_values *tx_data_val);
+void set_obs_det_ftm_timeover(bool val);
+bool get_obs_det_ftm_timeover(void);
+void set_obs_det_ftm_period_timeover(bool val);
+bool get_obs_det_ftm_period_timeover(void);
 void set_AiringConfig(uint8_t status);
 uint8_t get_AiringConfig(void);
+void set_laser_status_validated(bool status);
+bool get_laser_status_validated(void);
 void set_rem_alarm_silence_to_mcu2(bool status);
 bool get_rem_alarm_silence_to_muc2(void);
 

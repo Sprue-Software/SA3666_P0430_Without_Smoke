@@ -137,6 +137,17 @@ uint32_t FaultHandler_FaultCodeGet(FAULTHANDLER_FAULT fault) {
 	uint32_t fault_code;
 
 	switch (fault) {
+		case SmokeChamberDiodeHwFault:
+			fault_code = DEF_SMOKE_CHAMBER_HW_FAULT;
+			break;
+
+		case ObstacleDetectionHwFault:
+			fault_code = DEF_OBSTACLE_DET_HW_FAUT;
+			break;
+
+		case SoilingDetectionHwFault:
+			fault_code = DEF_SOILING_DET_HW_FAULT;
+			break;
 
 		case DemountingDetectionHwFault:
 			fault_code = DEF_DEMOUNTING_DET_HW_FAULT;
@@ -182,6 +193,21 @@ uint32_t FaultHandler_FaultCodeGet(FAULTHANDLER_FAULT fault) {
 			fault_code = DEF_MCU2_RAM_FAULT;
 			break;
 
+		case DegradedSmokeChamberFault:
+			fault_code = DEF_DEG_SMOKE_CHAMBER_FAULT;
+			break;
+
+		case ObstacleDetectedFault:
+			fault_code = DEF_OBSTACLE_DET_FAULT;
+			break;
+
+		case SoilingDetectedFault:
+			fault_code = DEF_SOILING_DET_FAULT;
+			break;
+
+		case CoverageDetectedFault:
+			fault_code = DEF_COVERAGE_DET_FAULT;
+			break;
 		case TempSensorOutOfBoundsFault:
 			fault_code = DEF_TEMP_SENSOR_OOB_FAULT;
 			break;

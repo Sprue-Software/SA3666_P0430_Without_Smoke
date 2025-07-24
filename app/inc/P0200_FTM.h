@@ -27,9 +27,9 @@
 #include "diagnostics.h"
 
 #ifdef DEBUG_BUILD
-#define P0200_FTM_COMMAND_COUNT 85U
+#define P0200_FTM_COMMAND_COUNT 75U
 #else
-#define P0200_FTM_COMMAND_COUNT 84U
+#define P0200_FTM_COMMAND_COUNT 74U
 #endif
 
 extern const nextGenCommsCommand_t P0200_FTMCommandTable[P0200_FTM_COMMAND_COUNT];

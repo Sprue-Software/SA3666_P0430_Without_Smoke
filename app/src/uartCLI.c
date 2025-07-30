@@ -152,54 +152,6 @@ static const cmdTable_t cliCommandTbl[] =
         .maxNoOfParams     = 1
     },
     {
-        .cmd            = "get-soiling-calib",
-        .handler        = NULL,
-        .helpText       = "Get soiling calibration values from EEPROM.",
-        .maxNoOfParams  = 0
-    },
-    {
-        .cmd            = "get-soiling-data",
-        .handler        = NULL,
-        .helpText       = "Get soiling live data values from EEPROM.",
-        .maxNoOfParams  = 0
-    },
-    {
-        .cmd            = "set-soiling-calib",
-        .handler        = NULL,
-        .helpText       = "Set soiling calibration values to EEPROM.",
-        .maxNoOfParams  = 7
-    },
-    {
-        .cmd            = "clr-soiling-sim",
-        .handler        = NULL,
-        .helpText       = "Clear soiling adc simulation value for a given sensor.",
-        .maxNoOfParams  = 2
-    },
-    {
-        .cmd            = "set-soiling-sim",
-        .handler        = NULL,
-        .helpText       = "Set soiling adc simulation value for a given sensor.",
-        .maxNoOfParams  = 2
-    },
-    {
-        .cmd            = "run-soiling",
-        .handler        = NULL,
-        .helpText       = "Run soiling tests using configured sensors and display millivolts",
-        .maxNoOfParams  = 0
-    },
-    {
-        .cmd            = "set-smoke-cleanair-threshold",
-        .handler        = NULL,
-        .helpText       = "Set smoke reflection threshold value to EEPROM.",
-        .maxNoOfParams  = 1
-    },
-    {
-        .cmd            = "set-smoke-cal-threshold",
-        .handler        = NULL,
-        .helpText       = "Set smoke calibration threshold value to EEPROM.",
-        .maxNoOfParams  = 1
-    },
-    {
         .cmd            = "start-heat-simulation",
         .handler        = CLI_start_heat_simulation,
         .helpText       = "Enters/Exits Simulated Heat mode. Pass 1 to enter and 0 to exit",
@@ -234,36 +186,6 @@ static const cmdTable_t cliCommandTbl[] =
          .handler        = CLI_set_battery_calib,
          .helpText       = "Set battery calibration values to EEPROM.",
          .maxNoOfParams  = 4
-    },
-    {
-        .cmd            = "start-smoke-simulation",
-        .handler        = NULL,
-        .helpText       = "Enters/Exits Simulated Smoke mode. Pass 1 to enter and 0 to exit",
-        .maxNoOfParams  = 1
-    },
-    {
-        .cmd            = "get-super-smoke-thresh",
-        .handler        = NULL,
-        .helpText       = "Gets the current super smoke threshold",
-        .maxNoOfParams  = 0
-    },
-    {
-        .cmd            = "get-smoke-thresh",
-        .handler        = NULL,
-        .helpText       = "Gets the current smoke threshold",
-        .maxNoOfParams  = 0
-    },
-    {
-        .cmd            = "inject-smoke",
-        .handler        = NULL,
-        .helpText       = "Inject simulated smoke value",
-        .maxNoOfParams  = 1
-    },
-    {
-        .cmd            = "inject-smoke-thresh",
-        .handler        = NULL,
-        .helpText       = "Inject simulated smoke threshold",
-        .maxNoOfParams  = 1
     },
     {
         .cmd            = "Get-current-Temperature",
@@ -347,24 +269,6 @@ static const cmdTable_t cliCommandTbl[] =
          .cmd            = "set-assistance-light",
          .handler        = CLI_set_assistance_light,
          .helpText       = "Turns assistance light on or off",
-         .maxNoOfParams  = 1
-    },
-    {
-         .cmd            = "set-smoke-dust-test-values",
-         .handler        = NULL,
-         .helpText       = "Set smoke dust correction test values",
-         .maxNoOfParams  = 2
-    },
-    {
-         .cmd            = "set-smoke-dust-test-mode",
-         .handler        = NULL,
-         .helpText       = "Enable or disables smoke dust test mode",
-         .maxNoOfParams  = 1
-    },
-    {
-         .cmd            = "set-smoke-dust-call-count",
-         .handler        = NULL,
-         .helpText       = "Set smoke dust call count",
          .maxNoOfParams  = 1
     },
     {

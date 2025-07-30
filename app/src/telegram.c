@@ -1950,7 +1950,7 @@ update_system_state_for_MCU2 (void)
   Ads_state_t mounting_status;
   bool set_clear = false;
   uint16_t SPI_SYSTEM_data = 0u;
-
+  SPI_SYSTEM_data = (SPI_SYSTEM_data & ~(1u << (uint8_t) SPI_Smoke_Alarm_State));
   if((getHeatState() == Heat_super) || (getHeatState() == Heat_high))
   {
       SPI_SYSTEM_data = SPI_SYSTEM_data | (1u << (uint8_t) SPI_Heat_Alarm_State);
@@ -2005,6 +2005,8 @@ update_system_state_for_MCU2 (void)
   {
       SPI_SYSTEM_data = (uint16_t) (SPI_SYSTEM_data & ~(1u << (uint16_t) SPI_Ambient_Light_Darkness_State));
   }
+  
+  SPI_SYSTEM_data = (uint16_t) (SPI_SYSTEM_data & ~(1u << (uint16_t) SPI_Device_Configuration_State_Smoke));
 
 
   return SPI_SYSTEM_data;

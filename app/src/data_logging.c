@@ -4782,7 +4782,7 @@ void Reset_EEPROM_Production(void)
      {
        DEBUG_APP("\nProduction Erase ", false, 0u);
        const uint8_t dev_config = DataLogging_GetDeviceConfig( );
-	   setIsDeviceSmokeEnable(false);
+	     setIsDeviceSmokeEnable(false);
        const uint32_t firstActivation = DataLogging_GetFirstActivation();
        const uint32_t timeStamp = DataLogging_GetLatestTimestamp();
        const uint32_t opState = DataLogging_GetOperatingState();

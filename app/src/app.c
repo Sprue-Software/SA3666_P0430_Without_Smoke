@@ -437,6 +437,10 @@ static void events_task(void *arg) {
    {
 
    }
+   else if (isCompleteProductonSet == PROD_COMP_BB)
+   {
+          setIsDeviceSmokeEnable(false);
+   }
    else if(isCompleteProductonSet == PROD_COMP_AA)
    {
       if(hal_get_ads_state() == Ads_offBase)

@@ -13,6 +13,7 @@
 #include "Variance.h"
 #include "timeHandler.h"
 #include "acquisition_Co.h"
+#include "CO_Calibration.h"
 
 /* variance Functions*/
 uint32_t calculateVar(void);

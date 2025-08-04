@@ -189,6 +189,7 @@ typedef enum {
 	setup_Co_Low_gain,/*setup ADC for CO measurement*/
 	setup_CoSensorTest,/*CO sensor test measurement*/
 	setup_thermistor, /*for thermistor measurement*/
+	setup_SmokeTest, /* /* deprecated */
 	setup_Buzzer_2_wire_init, /* 2 wire  Buzzer */
 	setup_Buzzer_2_wire_on,/* 2 wire  Buzzer on */
 	setup_Buzzer_2_wire_oFF,/* 2 wire  Buzzer off */
@@ -201,6 +202,7 @@ typedef enum {
 	setup_Heartbeat, /* Heartbeat Led*/
 	setup_powerLEDOn,
 	setup_powerLEDOff,
+	setup_Soling,      /* deprecated */
 	setup_FW_TEST_adc0,
 	setup_FW_TEST_adc1,
 	setup_FW_TEST_Adc_GPIO_SOIL_B,
@@ -313,6 +315,7 @@ void hal_AFE_dump( void );
 void hal_AFE_POR( void );
 void reset_POR( void );
 
+void Stop_ADC(void);
 /*******************************************************************************
  * @brief   Correct mV
  *

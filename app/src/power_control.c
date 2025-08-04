@@ -1,8 +1,8 @@
 /*******************************************************************************
  *
- * @file    soiling.h
+ * @file    power_control.c
  *
- * @brief   Soiling header file
+ * @brief   power control header file
  *
  * @date    15 Aug 2023
  *

@@ -200,16 +200,16 @@ void GPIO_AFECSHighSet(void) {
 /****************************************************************************************************//**
 *                                           GPIO_TurnHeatLEDOn()
 *
-* @brief	Turn Smoke LED On
+* @brief	Turn Heat LED On
 ********************************************************************************************************/
 void GPIO_TurnHeatLEDOn(void) {
 	GPIO_PinOutSet(DEF_HEAT_LED_PORT, DEF_HEAT_LED_PIN);
 }
 
 /****************************************************************************************************//**
-*                                          GPIO_TurnSmokeLEDOff()
+*                                          GPIO_TurnHeatLEDOff()
 *
-* @brief	Turn Smoke LED Off
+* @brief	Turn Heat LED Off
 ********************************************************************************************************/
 void GPIO_TurnHeatLEDOff(void) {
 	GPIO_PinOutClear(DEF_HEAT_LED_PORT, DEF_HEAT_LED_PIN);

@@ -215,7 +215,6 @@ static LEDBuzz_BuzzerState LEDBuzz_PreviousBuzzerStatus	= buzzerOff;
 
 static bool LEDBuzz_HighPriorityPatternPending 			= false;
 static bool LEDBuzz_Silence 							= false;
-static bool LEDBuzz_AssistanceLEDOn 					= false;
 
 static LEDBuzz_PendingPattern pendingPatternpool[DEF_PATTERN_QUEUE_SIZE];
 static bool LEDBuzz_GAP = true;

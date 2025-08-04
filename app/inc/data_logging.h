@@ -455,7 +455,6 @@ uint16_t DataLogging_GetFaultyBatteryVoltageLevel(void);
 void DataLogging_SetFaultyBatteryImpedanceLevel(uint16_t FaultBattImpedanceLevel);
 uint16_t DataLogging_GetFaultyBatteryImpedanceLevel(void);
 void DataLogging_SetSmokeEvent(uint8_t event_type);
-void DataLogging_GetSmokeEvent(uint8_t index, dl_event_t *pstr_smoke_event);
 uint16_t DataLogging_GetSmokeRemoteEventCount(void);
 
 /************************************* CO Events APIs **********************************/

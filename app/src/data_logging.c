@@ -335,10 +335,8 @@ static bool logMsgtoMCU = false;
 static bool DataLogging_WriteData(const void *pvdata, uint16_t address, uint16_t len);
 static void DataLogging_ReadData(void* pvdata, uint16_t address, uint16_t len);
 static void DataLogging_SetSmokeEventTimestamp(uint8_t index, uint32_t SmokeEventTimestamp);
-static uint32_t DataLogging_GetSmokeEventTimestamp(uint8_t index);
 static void DataLogging_SetSmokeRemoteEventCount(uint16_t SmokeRemoteEventCount);
 static void DataLogging_SetSmokeEventType(uint8_t index, uint8_t SmokeEventTypes);
-static uint8_t DataLogging_GetSmokeEventType(uint8_t index);
 static void DataLogging_SetCOEventTimestamp(uint8_t index, uint32_t COEventTimestamp);
 static uint32_t DataLogging_GetCOEventTimestamp(uint8_t index);
 static void DataLogging_SetCOLocalEventCount(uint16_t COLocalEventCount);
@@ -1745,9 +1743,9 @@ void DataLogging_SetAbufConfig( dl_abuf_cfg_data_t * pstr_abuf_cfg )
 
   dl_abuf_cfg_data_t cfg;
 
-  cfg.offset  = CommonUtils_Uint8ToUint16( ptr );
+  cfg.offset  = CommonUtils_Uint8ToUint16((const) ptr );
 
-  cfg.gain    = CommonUtils_Uint8ToUint16( &ptr[ 2 ] );
+  cfg.gain    = CommonUtils_Uint8ToUint16((const) &ptr[ 2 ] );
 
 	const uint16_t addr = ( uint16_t )( DATALOGGING_CALIB_CONFIG_ADDR_OFFSET +
                         ( uint16_t )( offsetof( dl_cfg_calib_data_type, abuf_config_data ) ) );
@@ -2617,26 +2615,6 @@ void DataLogging_SetSmokeEvent(uint8_t event_type) {
 }
 
 /****************************************************************************************************//**
-*                                    	DataLogging_GetSmokeEvent()
-*
-* @brief	Read all smoke events from the EEPROM
-*
-* @return	events structure
-********************************************************************************************************/
-void DataLogging_GetSmokeEvent(uint8_t index, dl_event_t *pstr_smoke_event) {
-
-	if (index < MAX_SUPPORTED_EVENTS)
-	{
-		pstr_smoke_event->Timestamp = DataLogging_GetSmokeEventTimestamp(index);			   /* get timestamp 	*/
-		pstr_smoke_event->EventType = DataLogging_GetSmokeEventType(index); /* get event type 	*/
-	}
-	else
-	{
-		/*Do nothing*/
-	}
-}
-
-/****************************************************************************************************//**
 *                                       DataLogging_SetSmokeEventTimestamp()
 *
 * @brief	Write smoke event time stamp in the EEPROM
@@ -2660,32 +2638,6 @@ static void DataLogging_SetSmokeEventTimestamp(uint8_t index, uint32_t SmokeEven
 }
 
 /****************************************************************************************************//**
-*                                       DataLogging_GetSmokeEventTimestamp()
-*
-* @brief	Read smoke event time stamp from the EEPROM
-*
-* @param	index	index of EEPROM location to read
-*
-* @return	smoke event time stamp
-********************************************************************************************************/
-static uint32_t DataLogging_GetSmokeEventTimestamp(uint8_t index) {
-
-  	uint32_t TimeStamp = 0;
-	if (index < MAX_SUPPORTED_EVENTS)
-	{
-		uint8_t buff[4] = {0};
-		uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeEventTimestamps[index])));
-		DataLogging_ReadData(buff, addr, sizeof(buff));
-		TimeStamp = CommonUtils_Uint8ToUint32(buff);
-	}
-	else
-	{
-		/*Do nothing*/
-	}
-	return TimeStamp;
-}
-
-/****************************************************************************************************//**
 *                                       	DataLogging_SetSmokeEventType()
 *
 * @brief	Write smoke event type in the EEPROM
@@ -2706,29 +2658,6 @@ static void DataLogging_SetSmokeEventType(uint8_t index, uint8_t SmokeEventTypes
 	}
 }
 
-/****************************************************************************************************//**
-*                                           DataLogging_GetSmokeEventType()
-*
-* @brief	Read smoke event type from the EEPROM
-*
-*
-* @param	index	index of EEPROM location to read
-*
-* @return	smoke event type
-********************************************************************************************************/
-static uint8_t DataLogging_GetSmokeEventType(uint8_t index) {
-	uint8_t data = 0;
-	if (index < MAX_SUPPORTED_EVENTS)
-	{
-		uint16_t addr = (uint16_t)(DATALOGGING_STATIC_LOCATION_ADDR_OFFSET + (uint16_t)(offsetof(dl_static_location_data_t, SmokeEventTypes[index])));
-		DataLogging_ReadData(&data, addr, sizeof(data));
-	}
-	else
-	{
-		/*Do nothing*/
-	}
-	return data;
-}
 /****************************************************************************************************//**
 *                                        DataLogging_SetSmokeRemoteEventCount()
 *
@@ -4781,7 +4710,6 @@ void Reset_EEPROM_Production(void)
      if( eeprom_ok )
      {
        DEBUG_APP("\nProduction Erase ", false, 0u);
-       const uint8_t dev_config = DataLogging_GetDeviceConfig( );
 	     setIsDeviceSmokeEnable(false);
        const uint32_t firstActivation = DataLogging_GetFirstActivation();
        const uint32_t timeStamp = DataLogging_GetLatestTimestamp();

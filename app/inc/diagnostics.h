@@ -27,4 +27,5 @@ OS_FLAGS diagnostics_GetDelayedFlags(void);
 uint8_t runBuzzerBist();
 void setBistResult(bool val);
 bool getBistResult(void);
+void setIsDeviceSmokeEnable(bool val);
 #endif /* APP_INC_DIAGNOSTICS_H_ */

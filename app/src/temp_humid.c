@@ -6,7 +6,6 @@
  *      NDI This Higher level application is modified for sht41  ( Use as wrapper driver for sht41)
  */
 #include <stdbool.h>
-#include <SHT41.h>
 #include "em_gpio.h"
 #include "sl_sleeptimer.h"
 #include "temp_humid.h"

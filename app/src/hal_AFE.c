@@ -115,7 +115,6 @@ OS_TCB AFETasktcb;
  ******************************************************************************/
 
 /********** AFE & ADC functions  ************/
-void Stop_ADC(void);
 void Enable_SetHigh(void);
 void Enable_SetLow(void);
 /********** Horn ************/
@@ -449,14 +448,6 @@ void AFE_Task(void *arg) {
                     LETimer_delay_ms(9u);
                 }
                 hal_AFE_HeartBeatOn(false);
-                break;
-            case setup_FW_TEST_Adc_GPIO_SOIL_A:
-                hal_AFE_ADC_Setup(setup_FW_TEST_Adc_GPIO_SOIL_A);
-
-                break;
-            case setup_FW_TEST_Adc_GPIO_SOIL_B:
-                hal_AFE_ADC_Setup(setup_FW_TEST_Adc_GPIO_SOIL_B);
-
                 break;
             case setup_FW_TEST_Adc_GPIO_LIGHT:
                 hal_AFE_ADC_Setup(setup_FW_TEST_Adc_GPIO_LIGHT);
@@ -1527,7 +1518,7 @@ void hal_AFE_delay_ms(uint16_t time_ms_val) {
 void hal_AFE_delay_us(uint16_t time_us_val) {
   uint16_t delay = 0u;
   /* delay in us*/
-  delay = time_us_val * 6u;   /* UH: Please don't change this value, smoke module is using time according to this */
+  delay = time_us_val * 6u;   /* UH: Please don't change this value, firmware module is using time according to this */
   for (uint16_t time = 0u; time < delay; time++) {
   __NOP();
 }
@@ -1633,38 +1624,6 @@ void enable_light_Sense(void) {
  */
 void disable_light_Sense(void) {
   V3S_ON_UNLOCK( v3s_state );
-}
-
-/**
- *  @brief  Disable SOIL A & B sensor
- * @details: This function will set the Soil A & B  pin Low
- * @params:Null
- * @return null
- */
-void disable_Soil_A_B(void) {
-GPIO_PinOutClear(MCU1_SOILA_ENABLE_PORT, MCU1_SOILA_ENABLE_PIN);
-GPIO_PinOutClear(MCU1_SOILB_ENABLE_PORT, MCU1_SOILB_ENABLE_PIN);
-}
-/**
- * @brief  Enable SOIL A & disable B sensor
- * @details: This function will set the Soil A   pin High
- * @params:Null
- * @return null
- */
-void enable_Soil_A_Sense(void) {
-/* Set the SOIL A  sense pin High */
-GPIO_PinOutSet(MCU1_SOILA_ENABLE_PORT, MCU1_SOILA_ENABLE_PIN);
-}
-
-/**
- *  @brief   Enable SOIL B & disable A sensor
- *  @details: This function will set the Soil  B  pin High
- * @params:Null
- * @return null
- */
-void enable_Soil_B_Sense(void) {
-/* Set the SOIL B  sense pin High */
-GPIO_PinOutSet(MCU1_SOILB_ENABLE_PORT, MCU1_SOILB_ENABLE_PIN);
 }
 
 /**

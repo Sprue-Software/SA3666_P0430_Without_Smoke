@@ -13,7 +13,6 @@
 #include  <common/include/lib_def.h>
 #include  <common/include/rtos_utils.h>
 #include  <common/include/toolchains.h>
-#include <SHT41.h>
 #include "em_core.h"
 #include "em_device.h"
 #include "em_chip.h"

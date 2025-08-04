@@ -15,7 +15,6 @@
 *********************************************************************************************************
 ********************************************************************************************************/
 
-#include <SHT41.h>
 #include "telegram.h"
 #include "cmsis_gcc.h"
 #include "stdbool.h"
@@ -432,7 +431,7 @@ Telegram_GetApplicationData (SPICOMMS_DATA_PACKET *p_packet)
     case DEF_ENTER_EM:/**< MCU-1 Don't support this command but MCU-2 has implementation : Use in the Production */
       Telegram_GetEnergyMode (p_packet);
       break;
-      break;
+
     case DEF_TOGGLE_AIRING_RECOMMENDATION:/**<  Airing recommendation  feature enable or Disable*/
       Telegram_GetToggleAiringRecommendation (p_packet);
       break;
@@ -441,17 +440,8 @@ Telegram_GetApplicationData (SPICOMMS_DATA_PACKET *p_packet)
       Telegram_GetAiringLight (p_packet);
       break;
 
-#if 0
-  case FUNCTIONAL_TEST:
-      Telegram_FunctionalTest(p_packet);
-     break;
-#endif
-
     default:
-      {
-
-        break;
-      }
+      break;
     }
 }
 
@@ -654,8 +644,6 @@ Telegram_GetDemountingLogbooks ( SPICOMMS_DATA_PACKET * p_packet )
   uint8_t buf[ sizeof( dl_demounting_logbook_record_t ) ] = { 0u }; 
 
   dl_demounting_logbook_record_t record = { 0 };
-
-  uint8_t packet_location = 0u;
 
   if( ( p_packet != NULL ) )
   {

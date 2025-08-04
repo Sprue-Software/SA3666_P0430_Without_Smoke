@@ -24,6 +24,7 @@
 #include "ctune.h"
 #include "user_info_page.h"
 #include "production.h"
+#include "sht4x.h"
 
 #ifdef DEBUG_BUILD
 /*********************************************** Local DEFINES *************************************************/
@@ -562,6 +563,7 @@ static cliStatus_t CLI_HelpFunc(int argc, char **argv)
 static cliStatus_t CLI_ResetCpu(int argc, char **argv)
 {
     NVIC_SystemReset();
+    return UARTCLI_OK;
 }
 
 static cliStatus_t CLI_GetBehaviorialSystemMode(int argc, char **argv)
@@ -844,7 +846,7 @@ static cliStatus_t CLI_set_event( int argc, char **argv )
 
     const uint16_t event = atoi( argv[ 1 ] );
 
-    strncpy( data, argv[ 2 ], sizeof( data ) );
+    strncpy( (const)data, (const)argv[ 2 ], sizeof( data ) );
 
     if( event == DEF_LBE_REMOTE_ALARM_TEST )
     {
@@ -1242,6 +1244,7 @@ static cliStatus_t CLI_start_heat_simulation(int argc, char **argv)
     {
         cmdLineIf.printFunc("Please pass a value of (0/1) to set/reset simulated heat mode\r\n");
     }
+    return UARTCLI_OK;
 }
 
 static cliStatus_t CLI_inject_heat_value(int argc, char **argv)
@@ -1255,6 +1258,7 @@ static cliStatus_t CLI_inject_heat_value(int argc, char **argv)
     {
         cmdLineIf.printFunc("Please pass a heat value in degree centegrade scaled by 10\r\n");
     }
+    return UARTCLI_OK;
 }
 
 /* @Note Fill up the other SPI Command types*/
@@ -1333,6 +1337,7 @@ static cliStatus_t CLI_get_spi_msg(int argc, char **argv)
     {
         cmdLineIf.printFunc("Please pass the index number of the SPI Command History (1 - 5)\r\n");
     }
+    return UARTCLI_OK;
 }
 
 
@@ -1472,6 +1477,7 @@ static cliStatus_t CLI_dump_all_spi_msg(int argc, char **argv)
             cmdLineIf.printFunc("No SPI Comms History Found\r\n");
         }
     }
+    return UARTCLI_OK;
 }
 
 static cliStatus_t CLI_get_battery_calib(int argc, char **argv)
